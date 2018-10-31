@@ -9,13 +9,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def area_ratio_calc(P1,P2,gamma):
+def area_ratio_calc(P1,P2,gamma,T1):
     
     M = Mach_number(P1,P2,gamma)
     
+    T = T1*(1+(gamma-1)/2*M**2)**(-1)
     A_R = ((gamma+1)/2)**(-(gamma+1)/(2*(gamma-1)))*((1+(gamma-1)/2*M**2)**((gamma+1)/(2*(gamma-1)))/M)
 
-    return A_R, M
+    return A_R, M, T
 
 def exit_area(A_ratio,d_throat):
     
@@ -134,42 +135,40 @@ if __name__ == "__main__":
     alt_steps = 1000000
     
     thrust_design = 30000
-    T_throat = 3000
+    T_combustion = 3500
     P_comb = 70*P_SL
     
-    altitudes = np.linspace(0,40e3,alt_steps)
+    altitudes = np.linspace(0,100e3,alt_steps)
     P_variation, altitudes = pressure_variation(alt_steps,altitudes,P_SL,g_0)
 
     ## Bell
-    P_design_bell = 0.1*P_SL
+    P_design_bell = 0.01*P_SL
     design_altitude_bell_ind = np.where(abs(P_variation-P_design_bell) == np.min(abs(P_variation-P_design_bell)))[0][0]
     design_alt_bell = altitudes[design_altitude_bell_ind]
     
-    A_ratio, Mj = area_ratio_calc(P_comb,P_design_bell,gamma)
-    v_e = exhaust_velocity(gamma,R,T_throat,Mj)
+    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_design_bell,gamma,T_combustion)
+    v_e = exhaust_velocity(gamma,R,Tj,Mj)
     m_dot_bell_design = thrust_design/v_e
-    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_throat,R,gamma,m_dot_bell_design)
+    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_combustion,R,gamma,m_dot_bell_design)
     
-    A_ratio, Mj = area_ratio_calc(P_comb,P_design_bell,gamma)
+    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_design_bell,gamma,T_combustion)
     A_exit = exit_area(A_ratio,d_throat)
     
     bell_thrust = thrust_output(P_variation,P_comb,gamma,P_design_bell,thrust_design,A_exit)
     plt.plot(altitudes,bell_thrust)
     
     ## Aerospike
-    P_design_aero = 0.5*P_SL
+    P_design_aero = 0.01*P_SL
     design_altitude_aero_ind = np.where(abs(P_variation-P_design_aero) == np.min(abs(P_variation-P_design_aero)))[0][0]
     design_alt_aero = altitudes[design_altitude_aero_ind]
     
-    A_ratio, Mj = area_ratio_calc(P_comb,P_design_aero,gamma)
-    v_e = exhaust_velocity(gamma,R,T_throat,Mj)
+    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_design_aero,gamma,T_combustion)
+    v_e = exhaust_velocity(gamma,R,Tj,Mj)
     m_dot_aero_design = thrust_design/v_e
-    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_throat,R,gamma,m_dot_aero_design)
+    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_combustion,R,gamma,m_dot_aero_design)
     
-    A_ratio, Mj = area_ratio_calc(P_comb,P_variation,gamma)
-    v_e = exhaust_velocity(gamma,R,T_throat,Mj)
-    
-    v_e = exhaust_velocity(gamma,R,T_throat,Mj)
+    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_variation,gamma,T_combustion)
+    v_e = exhaust_velocity(gamma,R,Tj,Mj)
     aerospike_thrust = m_dot_aero_design*v_e
 
 ##    thrust = thrust_output(P_variation,P_comb,gamma,P_design,aerospike_thrust,A_exit,True)
