@@ -236,10 +236,8 @@ if __name__ == "__main__":  # for testing
     delta_vee_stage = np.array([delta_vee_req*1/3,delta_vee_req*2/3])
     mass_ratio = np.exp(delta_vee_stage/(design_Isp*g))
     
-
     ## Flow rates and thrust profiles (stages can be taken into account here? need mass decrease too though)
     thrust_profile = np.linspace(design_thrust,design_thrust,t_steps)/design_thrust
-    
     
     ## Change to a smart loop or something
     stage_m_prop_2 = (mass_ratio[1]-1)*(stage_m_dry[1])
