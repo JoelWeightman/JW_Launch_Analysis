@@ -74,49 +74,34 @@ def model_burn(variables,t,G,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd):
     D = drag_current(v,Cd,altitude,rocket_diam)
     
     v_prime = (T - D)/m - (G*M_e/R_current**2)*np.sin(phi)
-    phi_prime = -1/v*(G*M_e/R_current**2 - v**2/R_current)*np.cos(phi)
+    phi_prime = -1/v*(G*M_e/R_current**2)*np.cos(phi) + v*np.cos(phi)/R_current
     x_prime = v*np.cos(phi)
     y_prime = v*np.sin(phi)
     m_prime = -m_dot
-    
-    return v_prime, phi_prime, x_prime, y_prime, m_prime
-
-def model_coast(variables,t,G,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd):
-    
-    v,phi,x,y,m = variables
-    
-    R_current = np.sqrt(x**2 + y**2)
-    altitude = R_current - R_e
-    T = 0
-    D = drag_current(v,Cd,altitude,rocket_diam)
-    print(D)
-    
-    v_prime = (T - D)/m - (G*M_e/R_current**2)*np.sin(phi)
-    phi_prime = -1/v*(G*M_e/R_current**2 - v**2/R_current)*np.cos(phi)
-    x_prime = v*np.cos(phi)
-    y_prime = v*np.sin(phi)
-    m_prime = 0
     
     return v_prime, phi_prime, x_prime, y_prime, m_prime
     
     
 if __name__ == "__main__":
     
+    plt.close('all')
+    
     g = 9.81
     G = 6.673e-11
     M_e = 5.98e24
     R_e = 6.38e6
+    t_steps = 1000
     
-    Isp_design = 300
-    thrust_design = 10000
+    Isp_design = 350
+    thrust_design = 50000
     rocket_diam = 0.5
     Cd = 0.2
-    m_dry = 10
+    m_dry = 220
     
-    target_altitude = 300e3
+    target_altitude = 250e3
     
     orbital_vel = np.sqrt(G*M_e/(R_e+target_altitude))
-    delta_vee_drag = 200
+    delta_vee_drag = 150
     delta_vee_gravity = 1500
     
     delta_vee_req = orbital_vel + delta_vee_gravity + delta_vee_drag
@@ -128,11 +113,12 @@ if __name__ == "__main__":
     m_init = mass_ratio * m_dry
     m_prop = m_init - m_dry
     t_burn = m_prop / m_dot
+    
+    
     event_alt = 1000
-    GT_angle = 89*np.pi/180
+    GT_angle = 83.8*np.pi/180
     
-    
-    t1 = np.linspace(0,t_burn/5,1000)
+    t1 = np.linspace(0,t_burn/2,t_steps)
     init_conds = [1, np.pi/2, 0, R_e, m_init]
     trajectory1 = odeint(model_burn, init_conds, t1, args=(G,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd))
     
@@ -142,31 +128,47 @@ if __name__ == "__main__":
     
     event_conds = [v[ind],GT_angle,x[ind],y[ind],m[ind]]
     t_event = t1[ind]
-    t2 = np.linspace(t_event,t_burn,1000)
+    t2 = np.linspace(t_event,t_burn,t_steps)
     
     trajectory2 = odeint(model_burn, event_conds, t2, args=(G,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd))
     
     [v,phi,x,y,m] = np.concatenate((np.transpose(trajectory1[:ind,:]),np.transpose(trajectory2)),axis = 1)
     
     coast_conds = [v[-1],phi[-1],x[-1],y[-1],m[-1]]
-    t3 = np.linspace(t_burn,t_burn*50,1000)
+    t3 = np.linspace(t_burn,t_burn*2,t_steps*10)
     
-    trajectory3 = odeint(model_coast, coast_conds, t3, args=(G,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd))
+    trajectory3 = odeint(model_burn, coast_conds, t3, args=(G,M_e,R_e,0,0,rocket_diam,Cd))
     
     [v,phi,x,y,m] = np.concatenate((np.transpose(trajectory1[:ind,:]),np.transpose(trajectory2),np.transpose(trajectory3)),axis = 1)
     
     
     t = np.concatenate((t1[:ind],t2,t3))
     
-    
     plt.figure()
     plt.plot(x,y-R_e)
+    plt.axis('equal')
+    plt.xlabel('Downrange (m)')
+    plt.ylabel('Altitude (m)')
     
     plt.figure()
-    plt.plot(t,np.sqrt(x**2 + y**2))
+    plt.plot(t,np.sqrt(x**2 + y**2)-R_e)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Altitude (m)')
+    
+    plt.figure()
+    plt.plot(t,phi*180/np.pi)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Flight Angle (deg)')
     
     plt.figure()
     plt.plot(t,v)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Velocity (m/s)')
     
+    print('Initial Acceleration = {}g'.format((thrust_design/(g*m_init)-1)[0]))
+    print('Final Angle = {}'.format(phi[ind+t_steps]*180/np.pi))
+    print('Final Position Tangent = {}'.format(np.arctan2(y,x)[-1]-np.pi/2))
+    print('Final Altitude = {}'.format((np.sqrt(x**2 + y**2)-R_e)[-1]))
+    print('Final Velocity = {}'.format(v[-1]))
     
 
