@@ -134,7 +134,7 @@ if __name__ == "__main__":
     
     alt_steps = 1000000
     
-    thrust_design = 30000
+    m_dot_design = 10
     T_combustion = 3500
     P_comb = 70*P_SL
     
@@ -148,13 +148,14 @@ if __name__ == "__main__":
     
     A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_design_bell,gamma,T_combustion)
     v_e = exhaust_velocity(gamma,R,Tj,Mj)
-    m_dot_bell_design = thrust_design/v_e
-    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_combustion,R,gamma,m_dot_bell_design)
+    bell_thrust_design = m_dot_design*v_e
+    
+    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_combustion,R,gamma,m_dot_design)
     
     A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_design_bell,gamma,T_combustion)
     A_exit = exit_area(A_ratio,d_throat)
     
-    bell_thrust = thrust_output(P_variation,P_comb,gamma,P_design_bell,thrust_design,A_exit)
+    bell_thrust = thrust_output(P_variation,P_comb,gamma,P_design_bell,bell_thrust_design,A_exit)
     plt.plot(altitudes,bell_thrust)
     
     ## Aerospike
@@ -164,16 +165,17 @@ if __name__ == "__main__":
     
     A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_design_aero,gamma,T_combustion)
     v_e = exhaust_velocity(gamma,R,Tj,Mj)
-    m_dot_aero_design = thrust_design/v_e
-    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_combustion,R,gamma,m_dot_aero_design)
+    thrust_design = m_dot_design*v_e
+    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_combustion,R,gamma,m_dot_design)
     
     A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_variation,gamma,T_combustion)
     v_e = exhaust_velocity(gamma,R,Tj,Mj)
-    aerospike_thrust = m_dot_aero_design*v_e
+    aerospike_thrust = m_dot_design*v_e
+
 
 ##    thrust = thrust_output(P_variation,P_comb,gamma,P_design,aerospike_thrust,A_exit,True)
-    plt.plot(altitudes,aerospike_thrust)
-    plt.scatter(np.array([design_alt_aero,design_alt_bell]),np.array([thrust_design,thrust_design]),10,'k')
+#    plt.plot(altitudes,aerospike_thrust)
+#    plt.scatter(np.array([design_alt_aero,design_alt_bell]),np.array([thrust_design,thrust_design]),10,'k')
     
     
     

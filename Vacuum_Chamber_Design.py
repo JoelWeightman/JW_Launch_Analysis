@@ -110,15 +110,14 @@ def altitude_variation(P_variation,T):
     return altitude
 
 if __name__ == "__main__":
-    
-    
+     
     ## Chamber Sizing (m)
-    d_vac = 0.5
-    L = 6
+    d_vac = 1.0
+    L = 12
     
     ## Nozzle Sizing (m)
-    d_throat = 0.01 #(Effective d_throat for aerospike)
-    h_annulus = 0.001
+    d_throat = 0.02 #(Effective d_throat for aerospike)
+    h_annulus = 0.002
     
     ## Pressures (Pa)
     P_atm = 101325
@@ -126,11 +125,12 @@ if __name__ == "__main__":
     P_final = 1*101325
     P_up = P_atm*5
     
-    P_ratio_design = P_up/3262.1
+    P_ratio_design = P_up/7186 #20km
     
     ## others
     T = 288
-    t_steps = 1000
+    t_steps = 10000
+    
     rho_current = 0.000977525
     
     ## Vac Pump Specs
@@ -147,8 +147,8 @@ if __name__ == "__main__":
     m_final = chamber_mass(V,P_final,T)
     
     m_dot = nozzle_m_dot(d_throat,c_choked,rho_choked)
-    
-    run_time = (m_final-m_vac)/(m_dot-m_dot_vac_out)
+    m_dot_in = m_dot-m_dot_vac_out
+    run_time = (m_final-m_vac)/(m_dot_in)
     
     t = np.linspace(0,run_time,t_steps)
     
@@ -161,5 +161,15 @@ if __name__ == "__main__":
     
     plt.figure()
     plt.plot(t,(P_up/P_variation)/P_ratio_design)
+    
+    alt_40_ind = np.where(abs(altitude-40000) == np.min(abs(altitude-40000)))[0][0]
+    alt_30_ind = np.where(abs(altitude-30000) == np.min(abs(altitude-30000)))[0][0]
+    alt_20_ind = np.where(abs(altitude-20000) == np.min(abs(altitude-20000)))[0][0]
+    alt_10_ind = np.where(abs(altitude-10000) == np.min(abs(altitude-10000)))[0][0]
+
+    print('40km {}s, 30km {}s, 20km {}s, 10km {}s'.format(t[alt_40_ind],t[alt_30_ind],t[alt_20_ind],t[alt_10_ind]))
+    
+    
+    
 
     
