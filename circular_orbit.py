@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Sat Nov  3 18:33:52 2018
+
+@author: JL
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Fri Nov  2 16:57:53 2018
 
 @author: JL
@@ -73,7 +80,7 @@ def model_burn(variables,t,G,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd):
     T = thrust_current(altitude,thrust_design)
     D = drag_current(v,Cd,altitude,rocket_diam)
     
-    v_prime = (T - D)/m - (G*M_e/R_current**2)*np.sin(phi)
+    v_prime = (T - D)/m - (G*M_e/R_current**2 - v**2/R_current)*np.sin(phi)
     phi_prime = -1/v*(G*M_e/R_current**2)*np.cos(phi) + v*np.cos(phi)/R_current
     r_prime = v*np.sin(phi)
     theta_prime = v/R_current*np.cos(phi)
@@ -84,7 +91,7 @@ def model_burn(variables,t,G,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd):
     
 if __name__ == "__main__":
     
-    plt.close('all')
+#    plt.close('all')
     
     g = 9.81
     G = 6.673e-11
@@ -104,90 +111,36 @@ if __name__ == "__main__":
     GT_angle = 89*np.pi/180
     
     target_altitude = 300e3
+    orbital_period = 2*np.pi*np.sqrt((R_e+target_altitude)**3/(G*M_e))
     
     orbital_vel = np.sqrt(G*M_e/(R_e+target_altitude))
-    delta_vee_drag = 0
-    delta_vee_gravity = 0
-    
-    delta_vee_req = orbital_vel + delta_vee_gravity + delta_vee_drag
-    delta_vee_stage = np.array([delta_vee_req*3/5,delta_vee_req*2/5])
-    mass_ratio = np.exp(delta_vee_stage/(Isp_design*g))/1.2
-    
-    stage_m_prop_2 = (mass_ratio[1]-1)*(stage_m_dry[1])
-    stage_m_init_2 = stage_m_prop_2 + stage_m_dry[1]
-    stage_m_prop_1 = (mass_ratio[0]-1)*(stage_m_init_2 + (stage_m_dry[0]-stage_m_dry[1]))
-    stage_m_init_1 = stage_m_prop_1 + stage_m_dry[0] - stage_m_dry[1] + stage_m_init_2
-    
-    stage_m_init = np.array([stage_m_init_1,stage_m_init_2])
-    stage_m_prop = np.array([stage_m_prop_1,stage_m_prop_2])
+   
+    mass = 100
      
-    t_burn = stage_m_prop / stage_m_dot
+    t = np.linspace(0,orbital_period,t_steps)
+    init_conds = [orbital_vel, 0, R_e+target_altitude, np.pi/2, mass]
+    trajectory = odeint(model_burn, init_conds, t, args=(G,M_e,R_e,0,0,rocket_diam,Cd))
     
-    t1 = np.linspace(0,t_burn[0]/2,t_steps)
-    init_conds = [1, np.pi/2, R_e, 0, stage_m_init[0]]
-    trajectory1 = odeint(model_burn, init_conds, t1, args=(G,M_e,R_e,stage_m_dot[0],thrust_design,rocket_diam,Cd))
-    
-    [v,phi,r,theta,m] = np.transpose(trajectory1)
-    
+    [v,phi,r,theta,m] = np.transpose(trajectory)
+
     x = r*np.cos(theta)
     y = r*np.sin(theta)
-    
-    ind = np.where(np.abs(r-event_alt-R_e) == np.min(np.abs(r-event_alt-R_e)))[0][0]
-    
-    event_conds = [v[ind],GT_angle,r[ind],theta[ind],m[ind]]
-    t_event = t1[ind]
-    t2 = np.linspace(t_event,t_burn[0],t_steps)
-    
-    trajectory2 = odeint(model_burn, event_conds, t2, args=(G,M_e,R_e,stage_m_dot[0],thrust_design,rocket_diam,Cd))
-    
-    [v,phi,r,theta,m] = np.concatenate((np.transpose(trajectory1[:ind,:]),np.transpose(trajectory2)),axis = 1)
-    
-    x = r*np.cos(theta)
-    y = r*np.sin(theta)
-    
-    second_stage_conds = [v[-1],phi[-1],r[-1],theta[-1],stage_m_init[1]]
-    t3 = np.linspace(t_burn[0],t_burn[0] + t_burn[1],t_steps)
-    
-    trajectory3 = odeint(model_burn, second_stage_conds, t3, args=(G,M_e,R_e,stage_m_dot[1],stage_m_dot[1]*Isp_design*g,rocket_diam,Cd))
-    
-    [v,phi,r,theta,m] = np.concatenate((np.transpose(trajectory1[:ind,:]),np.transpose(trajectory2),np.transpose(trajectory3)),axis = 1)
-    
-    x = r*np.cos(theta)
-    y = r*np.sin(theta)
-    
-    coast_conds = [v[-1],phi[-1],r[-1],theta[-1],m[-1]]
-    t4 = np.linspace(t_burn[0] + t_burn[1],(t_burn[0] + t_burn[1])*5,t_steps)
-    
-    trajectory4 = odeint(model_burn, coast_conds, t4, args=(G,M_e,R_e,0,0,rocket_diam,Cd))
-    
-    [v,phi,r,theta,m] = np.concatenate((np.transpose(trajectory1[:ind-1,:]),np.transpose(trajectory2[:-1]),np.transpose(trajectory3[:-1]),np.transpose(trajectory4)),axis = 1)
-    
-    x = r*np.cos(theta)
-    y = r*np.sin(theta)
-    
-    t = np.concatenate((t1[:ind-1],t2[:-1],t3[:-1],t4))
     
     plt.figure()
-    plt.plot(x/1000,(y)/1000)
+    plt.plot(x/1000,(y-R_e)/1000)
     plt.axis('equal')
     plt.xlabel('Downrange (km)')
     plt.ylabel('Altitude (km)')
     
-    altitudes = r-R_e
-    
-    p1 = ind
-    p2 = ind + t_steps - 2
-    p3 = ind + 2*t_steps - 3
-    
+    altitudes = np.sqrt(x**2 + y**2) - R_e
+        
     plt.figure()
     plt.plot(t,altitudes/1000)
-    plt.scatter(np.array([t[p1],t[p2],t[p3]]),np.array([altitudes[p1],altitudes[p2],altitudes[p3]])/1000,10,'k')
     plt.xlabel('Time (s)')
     plt.ylabel('Altitude (km)')
     
     plt.figure()
     plt.plot(t,phi*180/np.pi)
-    plt.scatter(np.array([t[p1],t[p2],t[p3]]),np.array([phi[p1],phi[p2],phi[p3]])*180/np.pi,10,'k')
     plt.xlabel('Time (s)')
     plt.ylabel('Flight Angle (deg)')
     
@@ -198,16 +151,13 @@ if __name__ == "__main__":
     
     plt.figure()
     plt.plot(t,v/1000)
-    plt.scatter(np.array([t[p1],t[p2],t[p3]]),np.array([v[p1],v[p2],v[p3]])/1000,10,'k')
     plt.xlabel('Time (s)')
     plt.ylabel('Velocity (km/s)')
     
-    
-    
-    print('Initial Acceleration = {}g,{}g'.format((stage_m_dot[0]*Isp_design*g/(g*stage_m_init[0])-1),(stage_m_dot[1]*Isp_design*g/(g*stage_m_init[1])-1)))
-    print('Final Angle = {}'.format(phi[p2*2]*180/np.pi))
-    print('Final Position Tangent = {}'.format(np.arctan2(y,x)[-1]-np.pi/2))
-    print('Final Altitude = {}'.format((np.sqrt(x**2 + y**2)-R_e)[-1]))
-    print('Final Velocity = {}'.format(v[-1]))
+#    print('Initial Acceleration = {}g,{}g'.format((stage_m_dot[0]*Isp_design*g/(g*stage_m_init[0])-1),(stage_m_dot[1]*Isp_design*g/(g*stage_m_init[1])-1)))
+#    print('Final Angle = {}'.format(phi[p2*2]*180/np.pi))
+#    print('Final Position Tangent = {}'.format(np.arctan2(y,x)[-1]-np.pi/2))
+#    print('Final Altitude = {}'.format((np.sqrt(x**2 + y**2)-R_e)[-1]))
+#    print('Final Velocity = {}'.format(v[-1]))
     
 
