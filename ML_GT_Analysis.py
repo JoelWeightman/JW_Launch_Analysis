@@ -184,10 +184,10 @@ if __name__ == "__main__":
 
     n_inputs = 7
     
-    pop_size = 500
+    pop_size = 1000
     W_vel = 1.0
-    W_alt = 0.1
-    W_angle = 0.2
+    W_alt = 0.5
+    W_angle = 0.75
     
     ## Other Set Params
     perc_elite = 0.2
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     perc_selected = 0.4
     mutation_chance = 1.0
     
-    generations = 50
+    generations = 100
     samples = 1
     m_dry_max = 0.5e3
     event_alt_max = 5e3

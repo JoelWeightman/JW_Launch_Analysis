@@ -160,7 +160,7 @@ def calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stag
         x = r*np.cos(theta)
         y = r*np.sin(theta)
         
-        coast_conds = [7729,phi[-1],r[-1],theta[-1],m[-1]]
+        coast_conds = [v[-1],phi[-1],r[-1],theta[-1],m[-1]]
         t4 = np.linspace(t_burn[0] + t_burn[1],(t_burn[0] + t_burn[1])*20,t_steps)
         
         trajectory4 = odeint(model_burn, coast_conds, t4, args=(G_c,M_e,R_e,0,0,rocket_diam,Cd))
@@ -204,10 +204,10 @@ if __name__ == "__main__":
     plt.close('all')
         
     ## 
-    m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = [0.20202358, 0.92139656, 0.05569592, 0.74002347, 0.48871834, 0.84790779, 0.53837677]
+    m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = [0.3023023,  0.84006874, 0.07477426, 0.66729451, 0.70071262, 0.64289019, 0.64272017]
     
-    m_dry_max = 1e3
-    event_alt_max = 20e3
+    m_dry_max = 0.5e3
+    event_alt_max = 5e3
     
     m_dry *= m_dry_max
     event_alt *= event_alt_max
