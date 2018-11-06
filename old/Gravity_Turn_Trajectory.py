@@ -82,6 +82,14 @@ def model_burn(variables,t,G,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd):
     return v_prime, phi_prime, r_prime, theta_prime, m_prime
     
     
+def set_variables():
+    
+    g = 9.81
+    G = 6.673e-11
+    M_e = 5.98e24
+    R_e = 6.38e6
+    t_steps = 1000
+
 if __name__ == "__main__":
     
     plt.close('all')
