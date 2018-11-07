@@ -66,10 +66,67 @@ def pressure_variation(alt_steps,altitudes,P_SL,g):
 
     return P[::100], altitudes[::100]
 
-def altitude_variation(altitudes):
-       
+def altitude_variation_P(altitudes):
     
-    Temporary_pressure = np.array([
+    Temporary_pressure = np.array([0.00000000e+00, 1.01325000e+05, 1.00000000e-01, 1.00129426e+05,
+       2.00000000e-01, 9.89453020e+04, 3.00000000e-01, 9.77725386e+04,
+       4.00000000e-01, 9.66110579e+04, 5.00000000e-01, 9.54607764e+04,
+       6.00000000e-01, 9.43216059e+04, 7.00000000e-01, 9.31934679e+04,
+       8.00000000e-01, 9.20762840e+04, 9.00000000e-01, 9.09699708e+04,
+       1.00000000e+00, 8.98744449e+04, 1.10000000e+00, 8.87896231e+04,
+       1.20000000e+00, 8.77154267e+04, 1.30000000e+00, 8.66517824e+04,
+       1.40000000e+00, 8.55986067e+04, 1.50000000e+00, 8.45558163e+04,
+       1.60000000e+00, 8.35233377e+04, 1.70000000e+00, 8.25010923e+04,
+       1.80000000e+00, 8.14890017e+04, 1.90000000e+00, 8.04869875e+04,
+       2.00000000e+00, 7.94949713e+04, 2.10000000e+00, 7.85128793e+04,
+       2.20000000e+00, 7.75406348e+04, 2.30000000e+00, 7.65781622e+04,
+       2.40000000e+00, 7.56253859e+04, 2.50000000e+00, 7.46822310e+04,
+       2.60000000e+00, 7.37486228e+04, 2.70000000e+00, 7.28244875e+04,
+       2.80000000e+00, 7.19097513e+04, 2.90000000e+00, 7.10043413e+04,
+       3.00000000e+00, 7.01081845e+04, 3.10000000e+00, 6.92212076e+04,
+       3.20000000e+00, 6.83433392e+04, 3.30000000e+00, 6.74745077e+04,
+       3.40000000e+00, 6.66146415e+04, 3.50000000e+00, 6.57636694e+04,
+       3.60000000e+00, 6.49215209e+04, 3.70000000e+00, 6.40881258e+04,
+       3.80000000e+00, 6.32634146e+04, 3.90000000e+00, 6.24473181e+04,
+       4.00000000e+00, 6.16397671e+04, 4.10000000e+00, 6.08406930e+04,
+       4.20000000e+00, 6.00500272e+04, 4.30000000e+00, 5.92677019e+04,
+       4.40000000e+00, 5.84936501e+04, 4.50000000e+00, 5.77278040e+04,
+       4.60000000e+00, 5.69700970e+04, 4.70000000e+00, 5.62204633e+04,
+       4.80000000e+00, 5.54788368e+04, 4.90000000e+00, 5.47451518e+04,
+       5.00000000e+00, 5.40193430e+04, 6.00000000e+00, 4.71751807e+04,
+       7.00000000e+00, 4.10499225e+04, 8.00000000e+00, 3.55843066e+04,
+       9.00000000e+00, 3.07225526e+04, 1.00000000e+01, 2.64122339e+04,
+       1.10000000e+01, 2.26041652e+04, 1.20000000e+01, 1.92956403e+04,
+       1.30000000e+01, 1.64697779e+04, 1.40000000e+01, 1.40561658e+04,
+       1.50000000e+01, 1.19946594e+04, 1.60000000e+01, 1.02338909e+04,
+       1.70000000e+01, 8.72999010e+03, 1.80000000e+01, 7.44548536e+03,
+       1.90000000e+01, 6.34837247e+03, 2.00000000e+01, 5.41131076e+03,
+       2.10000000e+01, 4.61251049e+03, 2.20000000e+01, 3.93289928e+03,
+       2.30000000e+01, 3.35426503e+03, 2.40000000e+01, 2.86124305e+03,
+       2.50000000e+01, 2.44086197e+03, 2.60000000e+01, 2.08216129e+03,
+       2.70000000e+01, 1.77587220e+03, 2.80000000e+01, 1.51415175e+03,
+       2.90000000e+01, 1.29035833e+03, 3.00000000e+01, 1.09886287e+03,
+       3.10000000e+01, 9.34890987e+02, 3.20000000e+01, 7.94391013e+02,
+       3.30000000e+01, 6.74322330e+02, 3.40000000e+01, 5.71984763e+02,
+       3.50000000e+01, 4.84593049e+02, 3.60000000e+01, 4.09824952e+02,
+       3.70000000e+01, 3.45740260e+02, 3.80000000e+01, 2.90714534e+02,
+       3.90000000e+01, 2.43384934e+02, 4.00000000e+01, 2.02605738e+02,
+       4.50000000e+01, 6.20681221e+01, 5.00000000e+01, 0.00000000e+00,
+       5.50000000e+01, 0.00000000e+00, 6.00000000e+01, 0.00000000e+00,
+       6.50000000e+01, 0.00000000e+00, 7.00000000e+01, 0.00000000e+00,
+       8.00000000e+01, 0.00000000e+00, 9.00000000e+01, 0.00000000e+00,
+       1.00000000e+02, 0.00000000e+00, 1.10000000e+02, 0.00000000e+00])
+    
+    alt = Temporary_pressure[0::2] * 10**3
+    pressure = Temporary_pressure[1::2]
+
+    pressure_variation = np.interp(altitudes, alt, pressure)
+    
+    return pressure_variation
+
+def altitude_variation_rho(altitudes):
+       
+    Temporary_density = np.array([
         0.00000, 1.22500, 0.100000, 1.21328, 0.200000, 1.20165, 0.300000,
         1.19011, 0.400000, 1.17864, 0.500000, 1.16727, 0.600000, 1.15598,
         0.700000, 1.14477, 0.800000, 1.13364, 0.900000, 1.12260, 1.00000,
@@ -100,8 +157,8 @@ def altitude_variation(altitudes):
         0, 110, 0
     ])
 
-    alt = Temporary_pressure[0::2] * 10**3
-    density = Temporary_pressure[1::2]
+    alt = Temporary_density[0::2] * 10**3
+    density = Temporary_density[1::2]
 
     rho_variation = np.interp(altitudes, alt, density)
     
@@ -159,18 +216,18 @@ if __name__ == "__main__":
     plt.plot(altitudes,bell_thrust)
     
     ## Aerospike
-    P_design_aero = 0.01*P_SL
-    design_altitude_aero_ind = np.where(abs(P_variation-P_design_aero) == np.min(abs(P_variation-P_design_aero)))[0][0]
-    design_alt_aero = altitudes[design_altitude_aero_ind]
-    
-    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_design_aero,gamma,T_combustion)
-    v_e = exhaust_velocity(gamma,R,Tj,Mj)
-    thrust_design = m_dot_design*v_e
-    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_combustion,R,gamma,m_dot_design)
-    
-    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_variation,gamma,T_combustion)
-    v_e = exhaust_velocity(gamma,R,Tj,Mj)
-    aerospike_thrust = m_dot_design*v_e
+#    P_design_aero = 0.01*P_SL
+#    design_altitude_aero_ind = np.where(abs(P_variation-P_design_aero) == np.min(abs(P_variation-P_design_aero)))[0][0]
+#    design_alt_aero = altitudes[design_altitude_aero_ind]
+#    
+#    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_design_aero,gamma,T_combustion)
+#    v_e = exhaust_velocity(gamma,R,Tj,Mj)
+#    thrust_design = m_dot_design*v_e
+#    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_combustion,R,gamma,m_dot_design)
+#    
+#    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_variation,gamma,T_combustion)
+#    v_e = exhaust_velocity(gamma,R,Tj,Mj)
+#    aerospike_thrust = m_dot_design*v_e
 
 
 ##    thrust = thrust_output(P_variation,P_comb,gamma,P_design,aerospike_thrust,A_exit,True)

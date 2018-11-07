@@ -21,9 +21,7 @@ def calculate_result(pop, weights, m_dry_max, event_alt_max):
     for i in range(np.shape(pop['actions'])[0]):
         
         m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = pop['actions'][i,:]
-        
-#        m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = [0.2417085,  0.35612504, 0.01455789, 0.6628106,  0.48791092, 0.82595287, 0.31411318]
-        
+
         m_dry *= m_dry_max
         event_alt *= event_alt_max
         GT_angle *= np.pi/2
@@ -33,13 +31,38 @@ def calculate_result(pop, weights, m_dry_max, event_alt_max):
         
         score, results = GT.run_trajectory(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights)
         
-#        if i == 0:
-#        print(score)
-        
         pop['results'][i,:] = results
         pop['score'][i] = score
     
     return pop
+
+def calculate_result1(pop, weights, m_dry_max, event_alt_max):
+    
+#    for i in range(np.shape(pop['actions'])[0]):
+        
+    m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = [pop['actions'][:,0],pop['actions'][:,1],pop['actions'][:,2],pop['actions'][:,3],pop['actions'][:,4],pop['actions'][:,5],pop['actions'][:,6]]
+    
+#        m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = [0.2417085,  0.35612504, 0.01455789, 0.6628106,  0.48791092, 0.82595287, 0.31411318]
+    
+    m_dry *= m_dry_max
+    event_alt *= event_alt_max
+    GT_angle *= np.pi/2
+#        stage_mass_ratios = np.array([1.0,stage_mass_ratios])
+#        stage_m_dots = np.array([1.0,stage_m_dots])
+    stage_delta_vee_ratios = np.array([stage_delta_vee_ratios1,stage_delta_vee_ratios2])/(stage_delta_vee_ratios1 + stage_delta_vee_ratios2)
+    
+    stage_mass_ratios = stage_mass_ratios[np.newaxis,:]
+    stage_mass_ratios[0,:] = 1.0
+    stage_m_dots = stage_m_dots[np.newaxis,:]
+    stage_m_dots[0,:] = 1.0
+    
+    score, results = GT.run_trajectory(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights)
+    
+#        if i == 0:
+#        print(score)
+        
+    pop['results'] = results
+    pop['score'] = score
 
 def run_last(pop, weights, m_dry_max, event_alt_max):
     
@@ -228,4 +251,3 @@ if __name__ == "__main__":
         pop_best = [0.3023023,  0.84006874, 0.07477426, 0.66729451, 0.70071262, 0.64289019, 0.64272017]
     
     v, phi, r, theta, m, t, ind, grav_delta_vee = run_last(pop_best, np.array([0,0,0]), m_dry_max, event_alt_max)
-    
