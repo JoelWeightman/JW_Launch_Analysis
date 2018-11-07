@@ -43,7 +43,7 @@ def calculate_result(pop, weights, m_dry_max, event_alt_max):
 
 def run_last(pop, weights, m_dry_max, event_alt_max):
     
-    m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = pop['actions'][0,:]  
+    m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = pop 
 #        m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = [0.2417085,  0.35612504, 0.01455789, 0.6628106,  0.48791092, 0.82595287, 0.31411318]
         
     m_dry *= m_dry_max
@@ -192,13 +192,15 @@ def n_d_runfile(W_vel, W_alt, W_angle, perc_elite = 1, perc_lucky = 1, perc_muta
 
     gen_count_stats, pop, best_performance = run(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, mutation_chance, pop_size, generations, n_inputs, samples, m_dry_max, event_alt_max)
     
-    v, phi, r, theta, m, t, ind, grav_delta_vee = run_last(pop, np.array([0,0,0]), m_dry_max, event_alt_max)
+    v, phi, r, theta, m, t, ind, grav_delta_vee = run_last(pop['actions'][0], np.array([0,0,0]), m_dry_max, event_alt_max)
     
     return gen_count_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee
 
 if __name__ == "__main__":
        
     plt.close('all')
+    
+    already_run = True
 
     n_inputs = 7
     
@@ -219,5 +221,11 @@ if __name__ == "__main__":
     m_dry_max = 0.5e3
     event_alt_max = 5e3
     
-    generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max)
- 
+    if already_run == False:
+        generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max)
+        pop_best = pop['actions'][0]
+    else:
+        pop_best = [0.3023023,  0.84006874, 0.07477426, 0.66729451, 0.70071262, 0.64289019, 0.64272017]
+    
+    v, phi, r, theta, m, t, ind, grav_delta_vee = run_last(pop_best, np.array([0,0,0]), m_dry_max, event_alt_max)
+    

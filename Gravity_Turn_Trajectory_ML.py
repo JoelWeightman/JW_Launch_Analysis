@@ -249,10 +249,11 @@ def run_trajectory_final(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle
     
     
 #    print('Initial Acceleration = {}g,{}g'.format((stage_m_dot[0]*Isp_design*g/(g*stage_m_init[0])-1),(stage_m_dot[1]*Isp_design*g/(g*stage_m_init[1])-1)))
-    print('Final Angle = {}'.format(phi[p2]*180/np.pi))
-    print('Final Position Tangent = {}'.format(np.arctan2(y,x)[-1]-np.pi/2))
-    print('Final Altitude = {}'.format((np.sqrt(x**2 + y**2)-R_e)[-1]))
-    print('Final Velocity = {}'.format(v[-1]))
+    print('Initial Tilt Angle = {} degrees'.format(phi[p1]*180/np.pi))
+    print('Burn End Angle = {} degrees'.format(phi[p3]*180/np.pi))
+    print('Burn End Position Tangent = {} degrees'.format((np.arctan2(y,x)[p3]-np.pi/2)*180/np.pi))
+    print('Burn End Altitude = {}km'.format((np.sqrt(x**2 + y**2)-R_e)[p3]/1000))
+    print('Burn End Velocity = {}m/s'.format(v[p3]))
     
     return v, phi, r, theta, m, t, ind, grav_delta_vee, score
 
