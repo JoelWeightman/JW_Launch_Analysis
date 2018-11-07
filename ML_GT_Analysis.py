@@ -223,7 +223,7 @@ if __name__ == "__main__":
        
     plt.close('all')
     
-    already_run = True
+    already_run = False
 
     n_inputs = 7
     
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     perc_selected = 0.4
     mutation_chance = 1.0
     
-    generations = 5
+    generations = 50
     samples = 1
     m_dry_max = 0.5e3
     event_alt_max = 5e3

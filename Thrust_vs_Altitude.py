@@ -53,18 +53,44 @@ def thrust_output(P_variation,P_comb,gamma,P_design,thrust_design,A_exit,aerospi
      
     return thrust
     
-def pressure_variation(alt_steps,altitudes,P_SL,g):
-    
-    densities = altitude_variation(altitudes)
-    P = np.zeros(np.shape(altitudes))
-    d_alt = altitudes[1]-altitudes[0]
-    
-    P[0] = P_SL
-    
-    for i in range(1,alt_steps):
-        P[i] = P[i-1] - densities[i-1]*g*d_alt
+#def pressure_variation(alt_steps,altitudes,P_SL,g):
+#    
+#    densities = altitude_variation_rho(altitudes)
+#    P = np.zeros(np.shape(altitudes))
+#    d_alt = altitudes[1]-altitudes[0]
+#    
+#    P[0] = P_SL
+#    
+#    for i in range(1,alt_steps):
+#        P[i] = P[i-1] - densities[i-1]*g*d_alt
+#
+##    P[P<1] = 1
+#    
+#    alt_steps_needed = alt_steps/1000
+#    
+#    return P[::alt_steps_needed], altitudes[::alt_steps_needed]
 
-    return P[::100], altitudes[::100]
+def pressure_variation(altitudes,g,R):
+    
+    h = np.array([0,11e3,20e3,32e3,47e3,51e3,71e3])
+    P = np.array([101325.0,22632.1,5474.89,868.02,110.91,66.94,3.96])
+    T = np.array([288.15,216.65,216.65,228.65,270.65,270.65,214.65])
+    L = np.array([-0.0065,0,0.001,0.0028,0,-0.0028,-0.002])
+    
+    P_var = np.zeros(np.shape(altitudes))
+    
+    for i,alt in enumerate(altitudes):
+        
+        ind = np.where(abs(alt-h) == np.min(abs(alt-h)))[0][0]
+        if alt < h[ind]:
+            ind -= 1
+
+        if L[ind] == 0:
+            P_var[i] = P[ind]*np.exp(-g*(alt-h[ind])/(R*T[ind]))
+        else:
+            P_var[i] = P[ind]*(T[ind]/(T[ind]+L[ind]*(alt-h[ind])))**(g/(R*L[ind]))
+    
+    return P_var, altitudes
 
 def altitude_variation_P(altitudes):
     
@@ -111,18 +137,18 @@ def altitude_variation_P(altitudes):
        3.50000000e+01, 4.84593049e+02, 3.60000000e+01, 4.09824952e+02,
        3.70000000e+01, 3.45740260e+02, 3.80000000e+01, 2.90714534e+02,
        3.90000000e+01, 2.43384934e+02, 4.00000000e+01, 2.02605738e+02,
-       4.50000000e+01, 6.20681221e+01, 5.00000000e+01, 0.00000000e+00,
-       5.50000000e+01, 0.00000000e+00, 6.00000000e+01, 0.00000000e+00,
-       6.50000000e+01, 0.00000000e+00, 7.00000000e+01, 0.00000000e+00,
-       8.00000000e+01, 0.00000000e+00, 9.00000000e+01, 0.00000000e+00,
-       1.00000000e+02, 0.00000000e+00, 1.10000000e+02, 0.00000000e+00])
+       4.50000000e+01, 1.50000000e+02, 5.00000000e+01, 8.00000000e+01,
+       5.50000000e+01, 6.00000000e+01, 6.00000000e+01, 2.00000000e+01,
+       6.50000000e+01, 1.50000000e+01, 7.00000000e+01, 5.00000000e+00,
+       8.00000000e+01, 1.00000000e+00, 9.00000000e+01, 1.00000000e+00,
+       1.00000000e+02, 1.00000000e+00, 1.10000000e+02, 1.00000000e+00])
     
     alt = Temporary_pressure[0::2] * 10**3
     pressure = Temporary_pressure[1::2]
 
-    pressure_variation = np.interp(altitudes, alt, pressure)
+    pressure_var = np.interp(altitudes, alt, pressure)
     
-    return pressure_variation
+    return pressure_var
 
 def altitude_variation_rho(altitudes):
        
@@ -183,20 +209,22 @@ def choked_conditions(P1,T1,R,gam,m_dot):
 if __name__ == "__main__":
     
     ## Constants
-    R = 287
+    R_star = 8.314459848
+    Molar_mass = 28.9645e-3
+    R = R_star/Molar_mass
     gamma = 1.15
     P_SL = 101325
     T_SL = 288
     g_0 = 9.80665
     
-    alt_steps = 1000000
+    alt_steps = 10000
     
     m_dot_design = 10
     T_combustion = 3500
     P_comb = 70*P_SL
     
-    altitudes = np.linspace(0,100e3,alt_steps)
-    P_variation, altitudes = pressure_variation(alt_steps,altitudes,P_SL,g_0)
+    altitudes = np.linspace(0,150e3,alt_steps)
+    P_variation, altitudes = pressure_variation(altitudes,g_0,R)
 
     ## Bell
     P_design_bell = 0.01*P_SL
@@ -216,23 +244,23 @@ if __name__ == "__main__":
     plt.plot(altitudes,bell_thrust)
     
     ## Aerospike
-#    P_design_aero = 0.01*P_SL
-#    design_altitude_aero_ind = np.where(abs(P_variation-P_design_aero) == np.min(abs(P_variation-P_design_aero)))[0][0]
-#    design_alt_aero = altitudes[design_altitude_aero_ind]
-#    
-#    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_design_aero,gamma,T_combustion)
-#    v_e = exhaust_velocity(gamma,R,Tj,Mj)
-#    thrust_design = m_dot_design*v_e
-#    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_combustion,R,gamma,m_dot_design)
-#    
-#    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_variation,gamma,T_combustion)
-#    v_e = exhaust_velocity(gamma,R,Tj,Mj)
-#    aerospike_thrust = m_dot_design*v_e
+    P_design_aero = 0.01*P_SL
+    design_altitude_aero_ind = np.where(abs(P_variation-P_design_aero) == np.min(abs(P_variation-P_design_aero)))[0][0]
+    design_alt_aero = altitudes[design_altitude_aero_ind]
+    
+    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_design_aero,gamma,T_combustion)
+    v_e = exhaust_velocity(gamma,R,Tj,Mj)
+    thrust_design = m_dot_design*v_e
+    T_choked,rho_choked,c_choked,d_throat = choked_conditions(P_comb,T_combustion,R,gamma,m_dot_design)
+    
+    A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_variation,gamma,T_combustion)
+    v_e = exhaust_velocity(gamma,R,Tj,Mj)
+    aerospike_thrust = m_dot_design*v_e
 
 
-##    thrust = thrust_output(P_variation,P_comb,gamma,P_design,aerospike_thrust,A_exit,True)
-#    plt.plot(altitudes,aerospike_thrust)
-#    plt.scatter(np.array([design_alt_aero,design_alt_bell]),np.array([thrust_design,thrust_design]),10,'k')
+#    thrust = thrust_output(P_variation,P_comb,gamma,P_design,aerospike_thrust,A_exit,True)
+    plt.plot(altitudes,aerospike_thrust)
+    plt.scatter(np.array([design_alt_aero,design_alt_bell]),np.array([thrust_design,thrust_design]),10,'k')
     
     
     

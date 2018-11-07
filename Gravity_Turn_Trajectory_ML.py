@@ -38,75 +38,45 @@ def Mach_number(P1,P2,gamma):
     
     return M
 
-def current_pressure(altitude):
+def current_pressure(alt,g,R):
     
-    Temporary_pressure = np.array([0.00000000e+00, 1.01325000e+05, 1.00000000e-01, 1.00129426e+05,
-       2.00000000e-01, 9.89453020e+04, 3.00000000e-01, 9.77725386e+04,
-       4.00000000e-01, 9.66110579e+04, 5.00000000e-01, 9.54607764e+04,
-       6.00000000e-01, 9.43216059e+04, 7.00000000e-01, 9.31934679e+04,
-       8.00000000e-01, 9.20762840e+04, 9.00000000e-01, 9.09699708e+04,
-       1.00000000e+00, 8.98744449e+04, 1.10000000e+00, 8.87896231e+04,
-       1.20000000e+00, 8.77154267e+04, 1.30000000e+00, 8.66517824e+04,
-       1.40000000e+00, 8.55986067e+04, 1.50000000e+00, 8.45558163e+04,
-       1.60000000e+00, 8.35233377e+04, 1.70000000e+00, 8.25010923e+04,
-       1.80000000e+00, 8.14890017e+04, 1.90000000e+00, 8.04869875e+04,
-       2.00000000e+00, 7.94949713e+04, 2.10000000e+00, 7.85128793e+04,
-       2.20000000e+00, 7.75406348e+04, 2.30000000e+00, 7.65781622e+04,
-       2.40000000e+00, 7.56253859e+04, 2.50000000e+00, 7.46822310e+04,
-       2.60000000e+00, 7.37486228e+04, 2.70000000e+00, 7.28244875e+04,
-       2.80000000e+00, 7.19097513e+04, 2.90000000e+00, 7.10043413e+04,
-       3.00000000e+00, 7.01081845e+04, 3.10000000e+00, 6.92212076e+04,
-       3.20000000e+00, 6.83433392e+04, 3.30000000e+00, 6.74745077e+04,
-       3.40000000e+00, 6.66146415e+04, 3.50000000e+00, 6.57636694e+04,
-       3.60000000e+00, 6.49215209e+04, 3.70000000e+00, 6.40881258e+04,
-       3.80000000e+00, 6.32634146e+04, 3.90000000e+00, 6.24473181e+04,
-       4.00000000e+00, 6.16397671e+04, 4.10000000e+00, 6.08406930e+04,
-       4.20000000e+00, 6.00500272e+04, 4.30000000e+00, 5.92677019e+04,
-       4.40000000e+00, 5.84936501e+04, 4.50000000e+00, 5.77278040e+04,
-       4.60000000e+00, 5.69700970e+04, 4.70000000e+00, 5.62204633e+04,
-       4.80000000e+00, 5.54788368e+04, 4.90000000e+00, 5.47451518e+04,
-       5.00000000e+00, 5.40193430e+04, 6.00000000e+00, 4.71751807e+04,
-       7.00000000e+00, 4.10499225e+04, 8.00000000e+00, 3.55843066e+04,
-       9.00000000e+00, 3.07225526e+04, 1.00000000e+01, 2.64122339e+04,
-       1.10000000e+01, 2.26041652e+04, 1.20000000e+01, 1.92956403e+04,
-       1.30000000e+01, 1.64697779e+04, 1.40000000e+01, 1.40561658e+04,
-       1.50000000e+01, 1.19946594e+04, 1.60000000e+01, 1.02338909e+04,
-       1.70000000e+01, 8.72999010e+03, 1.80000000e+01, 7.44548536e+03,
-       1.90000000e+01, 6.34837247e+03, 2.00000000e+01, 5.41131076e+03,
-       2.10000000e+01, 4.61251049e+03, 2.20000000e+01, 3.93289928e+03,
-       2.30000000e+01, 3.35426503e+03, 2.40000000e+01, 2.86124305e+03,
-       2.50000000e+01, 2.44086197e+03, 2.60000000e+01, 2.08216129e+03,
-       2.70000000e+01, 1.77587220e+03, 2.80000000e+01, 1.51415175e+03,
-       2.90000000e+01, 1.29035833e+03, 3.00000000e+01, 1.09886287e+03,
-       3.10000000e+01, 9.34890987e+02, 3.20000000e+01, 7.94391013e+02,
-       3.30000000e+01, 6.74322330e+02, 3.40000000e+01, 5.71984763e+02,
-       3.50000000e+01, 4.84593049e+02, 3.60000000e+01, 4.09824952e+02,
-       3.70000000e+01, 3.45740260e+02, 3.80000000e+01, 2.90714534e+02,
-       3.90000000e+01, 2.43384934e+02, 4.00000000e+01, 2.02605738e+02,
-       4.50000000e+01, 6.20681221e+01, 5.00000000e+01, 0.00000000e+00,
-       5.50000000e+01, 0.00000000e+00, 6.00000000e+01, 0.00000000e+00,
-       6.50000000e+01, 0.00000000e+00, 7.00000000e+01, 0.00000000e+00,
-       8.00000000e+01, 0.00000000e+00, 9.00000000e+01, 0.00000000e+00,
-       1.00000000e+02, 0.00000000e+00, 1.10000000e+02, 0.00000000e+00])
+    h = np.array([0,11e3,20e3,32e3,47e3,51e3,71e3])
+    P = np.array([101325.0,22632.1,5474.89,868.02,110.91,66.94,3.96])
+    T = np.array([288.15,216.65,216.65,228.65,270.65,270.65,214.65])
+    L = np.array([-0.0065,0,0.001,0.0028,0,-0.0028,-0.002])
     
-    alt = Temporary_pressure[0::2] * 10**3
-    pressure = Temporary_pressure[1::2]
+    if np.isnan(alt):
+        P_var = 0.001
+        return P_var
+    else:
+        
+        if alt > 150e3:
+            alt = 150e3
+        elif alt < 0:
+            alt = 0
+        
+        ind = np.where(abs(alt-h) == np.min(abs(alt-h)))[0][0]
+        if alt < h[ind]:
+            ind -= 1
+    
+        if L[ind] == 0:
+            P_var = P[ind]*np.exp(-g*(alt-h[ind])/(R*T[ind]))
+        else:
+            P_var = P[ind]*(T[ind]/(T[ind]+L[ind]*(alt-h[ind])))**(g/(R*L[ind]))
+        
+        return P_var
 
-    Pressure_current = np.interp(altitude, alt, pressure)
+def thrust_current(alt,m_dot,P_chamber,T_chamber,gamma,R,g):
     
-    return Pressure_current
-
-def thrust_current(alt,Isp_design,m_dot,P_chamber,T_chamber,gamma,R):
-    
-    P_alt = current_pressure(alt)
+    P_alt = current_pressure(alt,g,R)
     
     AR, M, T = area_ratio_calc(P_chamber,P_alt,gamma,T_chamber)
     
     v_e = exhaust_velocity(gamma,R,T,M)
     
     thrust = m_dot*v_e
-    
-    return thrust,m_dot
+
+    return thrust
 
 def drag_current(V, Cd, d, rocket_diameter):
 
@@ -163,11 +133,13 @@ def model_burn(variables,t,G_c,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd,R,gamm
     
     R_current = r
     altitude = R_current - R_e
-    T = thrust_current(altitude,Isp_design,m_dot,P_chamber,T_chamber,gamma,R)
+    g = (G_c*M_e/R_current**2)
+    
+    T = thrust_current(altitude,m_dot,P_chamber,T_chamber,gamma,R,g)
     D = drag_current(v,Cd,altitude,rocket_diam)
     
-    v_prime = (T - D)/m - (G_c*M_e/R_current**2)*np.sin(phi)
-    phi_prime = -1/v*(G_c*M_e/R_current**2)*np.cos(phi) + v*np.cos(phi)/R_current
+    v_prime = (T - D)/m - g*np.sin(phi)
+    phi_prime = -1/v*g*np.cos(phi) + v*np.cos(phi)/R_current
     r_prime = v*np.sin(phi)
     theta_prime = v/R_current*np.cos(phi)
     m_prime = -m_dot
@@ -182,13 +154,15 @@ def set_variables(m_dry, stage_mass_ratios, stage_m_dots):
     M_e = 5.98e24
     R_e = 6.38e6
     
-    R = 287
-    gamma = 1.4
+    R_star = 8.314459848
+    Molar_mass = 28.9645e-3
+    R = R_star/Molar_mass
+    gamma = 1.15
     T_chamber = 3850
     P_chamber = 6e6
     
     t_steps = 1000
-    Isp_design = 330
+    Isp_design = 350
     thrust_design = 50000
     rocket_diam = 0.5
     Cd = 0.2
@@ -290,8 +264,8 @@ def trajectory_score(v,phi,r,R_e,target_altitude,orbital_vel,weights):
 
 def run_trajectory(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights):
     
-    g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
-    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle)
+    g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R, gamma, P_chamber, T_chamber = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
+    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, R, gamma, P_chamber, T_chamber)
 
     score = trajectory_score(v,phi,r,R_e,target_altitude,orbital_vel,weights)
     
@@ -300,7 +274,7 @@ def run_trajectory(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage
 def run_trajectory_final(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights):
     
     g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R, gamma, P_chamber, T_chamber = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
-    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, True)
+    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, R, gamma, P_chamber, T_chamber, True)
 
     score = trajectory_score(v,phi,r,R_e,target_altitude,orbital_vel,weights)
     
@@ -376,7 +350,7 @@ if __name__ == "__main__":
     weights = [1.0,1.0,1.0]
     
     g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R, gamma, P_chamber, T_chamber = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
-    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle,R,gamma,P_chamber,T_chamber, False)
+    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle,R,gamma,P_chamber,T_chamber, True)
 
     score = trajectory_score(v,phi,r,R_e,target_altitude,orbital_vel,weights)
     
@@ -419,8 +393,6 @@ if __name__ == "__main__":
     plt.scatter(np.array([t[p1],t[p2]]),np.array([v[p1],v[p2]])/1000,10,'k')
     plt.xlabel('Time (s)')
     plt.ylabel('Velocity (km/s)')
-    
-    
     
 #    print('Initial Acceleration = {}g,{}g'.format((stage_m_dot[0]*Isp_design*g/(g*stage_m_init[0])-1),(stage_m_dot[1]*Isp_design*g/(g*stage_m_init[1])-1)))
     print('Final Angle = {}'.format(phi[p2]*180/np.pi))
