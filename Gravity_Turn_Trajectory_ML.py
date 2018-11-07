@@ -199,6 +199,63 @@ def run_trajectory(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage
     
     return score
 
+def run_trajectory_final(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights):
+    
+    g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
+    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, True)
+
+    score = trajectory_score(v,phi,r,R_e,target_altitude,orbital_vel,weights)
+    
+    x = r*np.cos(theta)
+    y = r*np.sin(theta)
+    
+    grav_delta_vee = np.sum(g*np.cos(phi[:-1])*(t[1:] - t[:-1]))
+    
+    plt.figure()
+    plt.plot(x/1000,(y)/1000)
+    plt.axis('equal')
+    plt.xlabel('Downrange (km)')
+    plt.ylabel('Altitude (km)')
+    
+    altitudes = r-R_e
+    
+    p1 = ind
+    p2 = ind + t_steps - 2
+    p3 = ind + 2*t_steps - 4
+    
+    plt.figure()
+    plt.plot(t,altitudes/1000)
+    plt.scatter(np.array([t[p1],t[p2]]),np.array([altitudes[p1],altitudes[p2]])/1000,10,'k')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Altitude (km)')
+    
+    plt.figure()
+    plt.plot(t,phi*180/np.pi)
+    plt.scatter(np.array([t[p1],t[p2]]),np.array([phi[p1],phi[p2]])*180/np.pi,10,'k')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Flight Angle (deg)')
+    
+    plt.figure()
+    plt.plot(t,theta*180/np.pi)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Central Angle (deg)')
+    
+    plt.figure()
+    plt.plot(t,v/1000)
+    plt.scatter(np.array([t[p1],t[p2]]),np.array([v[p1],v[p2]])/1000,10,'k')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Velocity (km/s)')
+    
+    
+    
+#    print('Initial Acceleration = {}g,{}g'.format((stage_m_dot[0]*Isp_design*g/(g*stage_m_init[0])-1),(stage_m_dot[1]*Isp_design*g/(g*stage_m_init[1])-1)))
+    print('Final Angle = {}'.format(phi[p2]*180/np.pi))
+    print('Final Position Tangent = {}'.format(np.arctan2(y,x)[-1]-np.pi/2))
+    print('Final Altitude = {}'.format((np.sqrt(x**2 + y**2)-R_e)[-1]))
+    print('Final Velocity = {}'.format(v[-1]))
+    
+    return v, phi, r, theta, m, t, ind, grav_delta_vee, score
+
 if __name__ == "__main__":
     
     plt.close('all')
@@ -221,12 +278,14 @@ if __name__ == "__main__":
     weights = [1.0,1.0,1.0]
     
     g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
-    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, True)
+    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, False)
 
     score = trajectory_score(v,phi,r,R_e,target_altitude,orbital_vel,weights)
     
     x = r*np.cos(theta)
     y = r*np.sin(theta)
+    
+    grav_delta_vee = np.sum(g*np.cos(phi[:-1])*(t[1:] - t[:-1]))
     
     plt.figure()
     plt.plot(x/1000,(y)/1000)

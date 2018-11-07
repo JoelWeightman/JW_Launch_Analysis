@@ -41,6 +41,22 @@ def calculate_result(pop, weights, m_dry_max, event_alt_max):
     
     return pop
 
+def run_last(pop, weights, m_dry_max, event_alt_max):
+    
+    m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = pop['actions'][0,:]  
+#        m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = [0.2417085,  0.35612504, 0.01455789, 0.6628106,  0.48791092, 0.82595287, 0.31411318]
+        
+    m_dry *= m_dry_max
+    event_alt *= event_alt_max
+    GT_angle *= np.pi/2
+    stage_mass_ratios = np.array([1.0,stage_mass_ratios])
+    stage_m_dots = np.array([1.0,stage_m_dots])
+    stage_delta_vee_ratios = np.array([stage_delta_vee_ratios1,stage_delta_vee_ratios2])/(stage_delta_vee_ratios1 + stage_delta_vee_ratios2)
+    
+    v, phi, r, theta, m, t, ind, grav_delta_vee, score = GT.run_trajectory_final(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights)
+
+    return v, phi, r, theta, m, t, ind, grav_delta_vee
+
 def init_population(pop):
        
     pop['actions'][:,:] = np.random.uniform(0, 1, size = np.shape(pop['actions'][:,:]))
@@ -176,7 +192,9 @@ def n_d_runfile(W_vel, W_alt, W_angle, perc_elite = 1, perc_lucky = 1, perc_muta
 
     gen_count_stats, pop, best_performance = run(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, mutation_chance, pop_size, generations, n_inputs, samples, m_dry_max, event_alt_max)
     
-    return gen_count_stats, pop
+    v, phi, r, theta, m, t, ind, grav_delta_vee = run_last(pop, np.array([0,0,0]), m_dry_max, event_alt_max)
+    
+    return gen_count_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee
 
 if __name__ == "__main__":
        
@@ -196,10 +214,10 @@ if __name__ == "__main__":
     perc_selected = 0.4
     mutation_chance = 1.0
     
-    generations = 100
+    generations = 5
     samples = 1
     m_dry_max = 0.5e3
     event_alt_max = 5e3
     
-    generation_stats, pop = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max)
+    generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max)
  
