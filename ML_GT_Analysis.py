@@ -227,7 +227,7 @@ if __name__ == "__main__":
        
     plt.close('all')
     
-    already_run = False
+    already_run = True
 
     n_inputs = 7
     
@@ -252,6 +252,8 @@ if __name__ == "__main__":
         generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max)
         pop_best = pop['actions'][0]
     else:
-        pop_best = [0.3023023,  0.84006874, 0.07477426, 0.66729451, 0.70071262, 0.64289019, 0.64272017]
+#        pop_best = [0.43845223, 0.3502394,  0.07453115, 0.72081319, 0.73423318, 0.29759119, 0.53596437]
+        pop_best = [0.47822063, 0.63399491, 0.12428866, 0.40575253, 0.89077558, 0.54372162, 0.86891819]
+#        pop_best = [0.18081334, 0.88338588, 0.06904055, 0.95347774, 0.79715307, 0.438352, 0.53818901]
     
     v, phi, r, theta, m, t, ind, grav_delta_vee = run_last(pop_best, np.array([0,0,0]), m_dry_max, event_alt_max)

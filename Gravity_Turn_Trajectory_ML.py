@@ -142,7 +142,7 @@ def model_burn(variables,t,G_c,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd,R_air,
     D = drag_current(v,Cd,altitude,rocket_diam)
     
     v_prime = (T - D)/m - g*np.sin(phi)
-    phi_prime = -1/v*g*np.cos(phi) + v*np.cos(phi)/R_current
+    phi_prime = (-1/v*g*np.cos(phi) + v*np.cos(phi)/R_current)*1
     r_prime = v*np.sin(phi)
     theta_prime = v/R_current*np.cos(phi)
     m_prime = -m_dot
