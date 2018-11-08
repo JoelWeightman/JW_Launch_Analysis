@@ -61,18 +61,21 @@ def current_pressure(alt,g,R):
     
         if L[ind] == 0:
             P_var = P[ind]*np.exp(-g*(alt-h[ind])/(R*T[ind]))
+            T_var = T[ind]
         else:
             P_var = P[ind]*(T[ind]/(T[ind]+L[ind]*(alt-h[ind])))**(g/(R*L[ind]))
-        
-        return P_var
+            T_var = T[ind]+L[ind]*(alt-h[ind])
+            
+        rho_var = P_var/(R*T_var)
+        return P_var, T_var, rho_var
 
-def thrust_current(alt,m_dot,P_chamber,T_chamber,gamma,R,g):
+def thrust_current(alt,m_dot,P_chamber,T_chamber,gamma,R_air,R_prop,g):
     
-    P_alt = current_pressure(alt,g,R)
+    P_alt,T_alt,rho_alt = current_pressure(alt,g,R_air)
     
     AR, M, T = area_ratio_calc(P_chamber,P_alt,gamma,T_chamber)
     
-    v_e = exhaust_velocity(gamma,R,T,M)
+    v_e = exhaust_velocity(gamma,R_prop,T,M)
     
     thrust = m_dot*v_e
 
@@ -127,7 +130,7 @@ def density_calc(h):
 
     return rho_curr
 
-def model_burn(variables,t,G_c,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd,R,gamma,P_chamber,T_chamber):
+def model_burn(variables,t,G_c,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd,R_air,R_prop,gamma,P_chamber,T_chamber):
     
     v,phi,r,theta,m = variables
     
@@ -135,7 +138,7 @@ def model_burn(variables,t,G_c,M_e,R_e,m_dot,thrust_design,rocket_diam,Cd,R,gamm
     altitude = R_current - R_e
     g = (G_c*M_e/R_current**2)
     
-    T = thrust_current(altitude,m_dot,P_chamber,T_chamber,gamma,R,g)
+    T = thrust_current(altitude,m_dot,P_chamber,T_chamber,gamma,R_air,R_prop,g)
     D = drag_current(v,Cd,altitude,rocket_diam)
     
     v_prime = (T - D)/m - g*np.sin(phi)
@@ -156,7 +159,8 @@ def set_variables(m_dry, stage_mass_ratios, stage_m_dots):
     
     R_star = 8.314459848
     Molar_mass = 28.9645e-3
-    R = R_star/Molar_mass
+    R_air = R_star/Molar_mass
+    R_prop = 280
     gamma = 1.15
     T_chamber = 3850
     P_chamber = 6e6
@@ -169,20 +173,20 @@ def set_variables(m_dry, stage_mass_ratios, stage_m_dots):
     target_altitude = 300e3
     
     orbital_vel = np.sqrt(G_c*M_e/(R_e+target_altitude))
-    delta_vee_drag = 250
-    delta_vee_gravity = 2500
+    delta_vee_drag = 150
+    delta_vee_gravity = 1500
     
     delta_vee_req = orbital_vel + delta_vee_gravity + delta_vee_drag
     
     stage_m_dry = np.array(m_dry*stage_mass_ratios)
     stage_m_dot = np.array(stage_m_dots)*thrust_design/(Isp_design*g)
 
-    return g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R, gamma, P_chamber, T_chamber
+    return g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R_air, R_prop, gamma, P_chamber, T_chamber
 
-def calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, R, gamma, P_chamber, T_chamber, coast_on = False):
+def calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, R_air, R_prop, gamma, P_chamber, T_chamber, coast_on = False):
     
     delta_vee_stage = np.array([delta_vee_req]*stage_delta_vee_ratios)
-    mass_ratio = np.exp(delta_vee_stage/(Isp_design*g))/1.2
+    mass_ratio = np.exp(delta_vee_stage/(Isp_design*g))
     
     stage_m_prop_2 = (mass_ratio[1]-1)*(stage_m_dry[1])
     stage_m_init_2 = stage_m_prop_2 + stage_m_dry[1]
@@ -196,7 +200,7 @@ def calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stag
     
     t1 = np.linspace(0,t_burn[0]/2,t_steps)
     init_conds = [1, np.pi/2, R_e, 0, stage_m_init[0]]
-    trajectory1 = odeint(model_burn, init_conds, t1, args=(G_c,M_e,R_e,stage_m_dot[0],thrust_design,rocket_diam,Cd,R,gamma,P_chamber,T_chamber))
+    trajectory1 = odeint(model_burn, init_conds, t1, args=(G_c,M_e,R_e,stage_m_dot[0],thrust_design,rocket_diam,Cd,R_air,R_prop,gamma,P_chamber,T_chamber))
     
     [v,phi,r,theta,m] = np.transpose(trajectory1)
     
@@ -212,7 +216,7 @@ def calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stag
     t_event = t1[ind]
     t2 = np.linspace(t_event,t_burn[0],t_steps)
     
-    trajectory2 = odeint(model_burn, event_conds, t2, args=(G_c,M_e,R_e,stage_m_dot[0],thrust_design,rocket_diam,Cd,R,gamma,P_chamber,T_chamber))
+    trajectory2 = odeint(model_burn, event_conds, t2, args=(G_c,M_e,R_e,stage_m_dot[0],thrust_design,rocket_diam,Cd,R_air, R_prop,gamma,P_chamber,T_chamber))
     
     [v,phi,r,theta,m] = np.concatenate((np.transpose(trajectory1[:ind,:]),np.transpose(trajectory2)),axis = 1)
     
@@ -222,7 +226,7 @@ def calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stag
     second_stage_conds = [v[-1],phi[-1],r[-1],theta[-1],stage_m_init[1]]
     t3 = np.linspace(t_burn[0],t_burn[0] + t_burn[1],t_steps)
     
-    trajectory3 = odeint(model_burn, second_stage_conds, t3, args=(G_c,M_e,R_e,stage_m_dot[1],stage_m_dot[1]*Isp_design*g,rocket_diam,Cd,R,gamma,P_chamber,T_chamber))
+    trajectory3 = odeint(model_burn, second_stage_conds, t3, args=(G_c,M_e,R_e,stage_m_dot[1],stage_m_dot[1]*Isp_design*g,rocket_diam,Cd,R_air, R_prop,gamma,P_chamber,T_chamber))
     
     [v,phi,r,theta,m] = np.concatenate((np.transpose(trajectory1[:ind-1,:]),np.transpose(trajectory2[:-1,:]),np.transpose(trajectory3[:-1,:])),axis = 1)
     
@@ -235,7 +239,7 @@ def calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stag
         coast_conds = [v[-1],phi[-1],r[-1],theta[-1],m[-1]]
         t4 = np.linspace(t_burn[0] + t_burn[1],(t_burn[0] + t_burn[1])*20,t_steps)
         
-        trajectory4 = odeint(model_burn, coast_conds, t4, args=(G_c,M_e,R_e,0,0,rocket_diam,Cd,R,gamma,P_chamber,T_chamber))
+        trajectory4 = odeint(model_burn, coast_conds, t4, args=(G_c,M_e,R_e,0,0,rocket_diam,Cd,R_air, R_prop,gamma,P_chamber,T_chamber))
         
         [v,phi,r,theta,m] = np.concatenate((np.transpose(trajectory1[:ind-1,:]),np.transpose(trajectory2[:-1]),np.transpose(trajectory3[:-1]),np.transpose(trajectory4)),axis = 1)
         
@@ -264,8 +268,8 @@ def trajectory_score(v,phi,r,R_e,target_altitude,orbital_vel,weights):
 
 def run_trajectory(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights):
     
-    g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R, gamma, P_chamber, T_chamber = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
-    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, R, gamma, P_chamber, T_chamber)
+    g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R_air, R_prop, gamma, P_chamber, T_chamber = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
+    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, R_air, R_prop, gamma, P_chamber, T_chamber)
 
     score = trajectory_score(v,phi,r,R_e,target_altitude,orbital_vel,weights)
     
@@ -273,8 +277,8 @@ def run_trajectory(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage
 
 def run_trajectory_final(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights):
     
-    g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R, gamma, P_chamber, T_chamber = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
-    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, R, gamma, P_chamber, T_chamber, True)
+    g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R_air, R_prop, gamma, P_chamber, T_chamber = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
+    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle, R_air, R_prop, gamma, P_chamber, T_chamber, True)
 
     score = trajectory_score(v,phi,r,R_e,target_altitude,orbital_vel,weights)
     
@@ -349,8 +353,8 @@ if __name__ == "__main__":
 
     weights = [1.0,1.0,1.0]
     
-    g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R, gamma, P_chamber, T_chamber = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
-    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle,R,gamma,P_chamber,T_chamber, True)
+    g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R_air, R_prop, gamma, P_chamber, T_chamber = set_variables(m_dry, stage_mass_ratios, stage_m_dots)
+    v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, stage_m_dot, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_diam, Cd, event_alt, GT_angle,R_air, R_prop,gamma,P_chamber,T_chamber, True)
 
     score = trajectory_score(v,phi,r,R_e,target_altitude,orbital_vel,weights)
     
