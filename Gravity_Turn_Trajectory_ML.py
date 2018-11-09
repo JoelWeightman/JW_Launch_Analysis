@@ -179,7 +179,7 @@ def set_variables(m_dry, stage_mass_ratios, stage_m_dots):
     delta_vee_req = orbital_vel + delta_vee_gravity + delta_vee_drag
     
     stage_m_dry = np.array(m_dry*stage_mass_ratios)
-    stage_m_dot = np.array(stage_m_dots)*thrust_design/(Isp_design*g)
+    stage_m_dot = np.array(stage_m_dots)*10
 
     return g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R_air, R_prop, gamma, P_chamber, T_chamber
 
@@ -237,7 +237,7 @@ def calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stag
         y = r*np.sin(theta)
         
         coast_conds = [v[-1],phi[-1],r[-1],theta[-1],m[-1]]
-        t4 = np.linspace(t_burn[0] + t_burn[1],(t_burn[0] + t_burn[1])*20,t_steps)
+        t4 = np.linspace(t_burn[0] + t_burn[1],(t_burn[0] + t_burn[1])*20,t_steps*20)
         
         trajectory4 = odeint(model_burn, coast_conds, t4, args=(G_c,M_e,R_e,0,0,rocket_diam,Cd,R_air, R_prop,gamma,P_chamber,T_chamber))
         
@@ -301,13 +301,13 @@ def run_trajectory_final(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle
     
     plt.figure()
     plt.plot(t,altitudes/1000)
-    plt.scatter(np.array([t[p1],t[p2]]),np.array([altitudes[p1],altitudes[p2]])/1000,10,'k')
+    plt.scatter(np.array([t[p1],t[p2],t[p3]]),np.array([altitudes[p1],altitudes[p2],altitudes[p3]])/1000,10,'k')
     plt.xlabel('Time (s)')
     plt.ylabel('Altitude (km)')
     
     plt.figure()
     plt.plot(t,phi*180/np.pi)
-    plt.scatter(np.array([t[p1],t[p2]]),np.array([phi[p1],phi[p2]])*180/np.pi,10,'k')
+    plt.scatter(np.array([t[p1],t[p2],t[p3]]),np.array([phi[p1],phi[p2],phi[p3]])*180/np.pi,10,'k')
     plt.xlabel('Time (s)')
     plt.ylabel('Flight Angle (deg)')
     
@@ -318,7 +318,7 @@ def run_trajectory_final(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle
     
     plt.figure()
     plt.plot(t,v/1000)
-    plt.scatter(np.array([t[p1],t[p2]]),np.array([v[p1],v[p2]])/1000,10,'k')
+    plt.scatter(np.array([t[p1],t[p2],t[p3]]),np.array([v[p1],v[p2],v[p3]])/1000,10,'k')
     plt.xlabel('Time (s)')
     plt.ylabel('Velocity (km/s)')
     
