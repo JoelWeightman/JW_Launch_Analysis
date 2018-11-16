@@ -16,7 +16,7 @@ import scipy.integrate as integ
 from multiprocessing import Pool
 import Gravity_Turn_Trajectory_ML as GT
 
-def calculate_result(pop, weights, m_dry_max, event_alt_max, factor, refine):
+def calculate_result(pop, weights, m_dry_max, event_alt_max, alpha, factor, refine):
     
     if refine:
         filename = 'Population_Results.npy'
@@ -33,11 +33,11 @@ def calculate_result(pop, weights, m_dry_max, event_alt_max, factor, refine):
         m_dry = 150#m_dry_max
         event_alt *= event_alt_max
         GT_angle = np.pi/2 - GT_angle*5*np.pi/180
-        stage_mass_ratios = np.array([1.0,(stage_mass_ratios*0.15+0.05)])
-        stage_m_dots = np.array([1.0,stage_m_dots])
+        stage_m_dots = np.array([stage_mass_ratios,stage_m_dots])
+        stage_mass_ratios = np.array([1.0,(0.1)])
         stage_delta_vee_ratios = np.array([stage_delta_vee_ratios1,stage_delta_vee_ratios2])/(stage_delta_vee_ratios1 + stage_delta_vee_ratios2)
         
-        score, results = GT.run_trajectory(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights)
+        score, results = GT.run_trajectory(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights,alpha)
         
         pop['results'][i,:] = results
         pop['score'][i] = score
@@ -76,20 +76,19 @@ def calculate_result(pop, weights, m_dry_max, event_alt_max, factor, refine):
 #    pop['results'] = results
 #    pop['score'] = score
 
-def run_last(pop, weights, m_dry_max, event_alt_max):
+def run_last(pop, weights, m_dry_max, event_alt_max, alpha):
     
     m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = pop 
 #        m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = [0.2417085,  0.35612504, 0.01455789, 0.6628106,  0.48791092, 0.82595287, 0.31411318]
         
-    m_dry *= m_dry_max
-    m_dry = 150
+    m_dry = 150#m_dry_max
     event_alt *= event_alt_max
     GT_angle = np.pi/2 - GT_angle*5*np.pi/180
-    stage_mass_ratios = np.array([1.0,(stage_mass_ratios*0.15+0.05)])
-    stage_m_dots = np.array([1.0,stage_m_dots])
+    stage_m_dots = np.array([stage_mass_ratios,stage_m_dots])
+    stage_mass_ratios = np.array([1.0,(0.1)])
     stage_delta_vee_ratios = np.array([stage_delta_vee_ratios1,stage_delta_vee_ratios2])/(stage_delta_vee_ratios1 + stage_delta_vee_ratios2)
         
-    v, phi, r, theta, m, t, ind, grav_delta_vee, score = GT.run_trajectory_final(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights)
+    v, phi, r, theta, m, t, ind, grav_delta_vee, score = GT.run_trajectory_final(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios,weights,alpha)
 
     return v, phi, r, theta, m, t, ind, grav_delta_vee
 
@@ -148,7 +147,7 @@ def generate_children(pop, actions, selection_num, selected_pop, mutated_pop):
 
     return pop
 
-def run(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, mutation_chance, pop_size, generations, n_inputs, samples, m_dry_max, event_alt_max, factor, refine):
+def run(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, mutation_chance, pop_size, generations, n_inputs, samples, m_dry_max, event_alt_max, factor, refine, alpha):
     
 #    plt.close("all")
     thresh_perf = 0.01
@@ -194,7 +193,7 @@ def run(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, mutation_c
         ## Calculate Generations until convergence or theory max               
         for I in range(generations):
             
-            pop = calculate_result(pop, weights, m_dry_max, event_alt_max, factor,refine)
+            pop = calculate_result(pop, weights, m_dry_max, event_alt_max, alpha, factor,refine)
             pop, best_performance = pop_selection(pop, selection_num)
             
 #            if best_performance[0] < 0:
@@ -222,11 +221,11 @@ def run(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, mutation_c
     
     return gen_count_stats, pop, best_performance
 
-def n_d_runfile(W_vel, W_alt, W_angle, perc_elite = 1, perc_lucky = 1, perc_mutation = 1, perc_selected = 1, mutation_chance = 1, samples = 1, generations = 1, m_dry_max = 1, event_alt_max = 1, factor = 1, refine = False):
+def n_d_runfile(W_vel, W_alt, W_angle, perc_elite = 1, perc_lucky = 1, perc_mutation = 1, perc_selected = 1, mutation_chance = 1, samples = 1, generations = 1, m_dry_max = 1, event_alt_max = 1, factor = 1, refine = False, alpha = 0):
 
     perc_elite, perc_lucky, perc_mutation, perc_selected = np.array([perc_elite, perc_lucky, perc_mutation, perc_selected])/(perc_elite + perc_lucky + perc_mutation + perc_selected)
 
-    gen_count_stats, pop, best_performance = run(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, mutation_chance, pop_size, generations, n_inputs, samples, m_dry_max, event_alt_max, factor, refine)
+    gen_count_stats, pop, best_performance = run(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, mutation_chance, pop_size, generations, n_inputs, samples, m_dry_max, event_alt_max, factor, refine, alpha)
         
     if refine == False:
         filename = 'Population_Results.npy'
@@ -241,7 +240,7 @@ def n_d_runfile(W_vel, W_alt, W_angle, perc_elite = 1, perc_lucky = 1, perc_muta
         filename = 'Population_Results.npy'
         np.save(filename, pop)
     
-    v, phi, r, theta, m, t, ind, grav_delta_vee = run_last(pop['actions'][0], np.array([0,0,0]), m_dry_max, event_alt_max)
+    v, phi, r, theta, m, t, ind, grav_delta_vee = run_last(pop['actions'][0], np.array([0,0,0]), m_dry_max, event_alt_max, alpha)
     
     return gen_count_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee
 
@@ -251,11 +250,11 @@ if __name__ == "__main__":
     
     already_run = False
     ready_for_refine = False
-    ready_for_refine2 = True
+    ready_for_refine2 = False
     n_inputs = 7
     factor = 1
     
-    pop_size = 1000
+    pop_size = 500
     W_vel = 0.5
     W_alt = 0.5
     W_angle = 1.0
@@ -267,14 +266,16 @@ if __name__ == "__main__":
     perc_selected = 0.4
     mutation_chance = 1.0
     
-    generations = 50
+    generations = 30
     samples = 1
     m_dry_max = 0.5e3
     event_alt_max = 5e3
+    alpha = -5 ## In degrees
+    alpha*= np.pi/180
     
     if ready_for_refine == False:
         if already_run == False:
-            generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max, factor, False)
+            generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max, factor, False, alpha)
             pop_best = pop['actions'][0]
             
             filename = 'Population_Results_Orig.npy'
@@ -287,41 +288,43 @@ if __name__ == "__main__":
             pop_best = pop_ref_all['actions'][0]
             ready_for_refine = True
     
-    if ready_for_refine == True:
-        factor = 0.1
-        if already_run == False:
-            generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max, factor, True)
-            pop_best = pop['actions'][0]
-            
-            filename = 'Population_Results_Refine_1.npy'
-            np.save(filename, pop)
-        else:
-            filename = 'Population_Results.npy'
-            pop_ref_all = np.load(filename).item()
-            pop_best = pop_ref_all['actions'][0]
-            
-
-    if ready_for_refine2 == True:
-        factor = 0.01
-        if already_run == False:
-            generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max, factor, True)
-            pop_best = pop['actions'][0]
-            
-            filename = 'Population_Results_Refine_2.npy'
-            np.save(filename, pop)
-        else:
-            filename = 'Population_Results.npy'
-            pop_ref_all = np.load(filename).item()
-            pop_best = pop_ref_all['actions'][0]
+#    if ready_for_refine == True:
+#        factor = 0.1
+#        if already_run == False:
+#            generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max, factor, True, alpha)
+#            pop_best = pop['actions'][0]
+#            
+#            filename = 'Population_Results_Refine_1.npy'
+#            np.save(filename, pop)
+#            ready_for_refine2 = True
+#        else:
+#            filename = 'Population_Results.npy'
+#            pop_ref_all = np.load(filename).item()
+#            pop_best = pop_ref_all['actions'][0]
+#            ready_for_refine2 = True
+#            
+#
+#    if ready_for_refine2 == True:
+#        factor = 0.01
+#        if already_run == False:
+#            generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max, factor, True, alpha)
+#            pop_best = pop['actions'][0]
+#            
+#            filename = 'Population_Results_Refine_2.npy'
+#            np.save(filename, pop)
+#        else:
+#            filename = 'Population_Results.npy'
+#            pop_ref_all = np.load(filename).item()
+#            pop_best = pop_ref_all['actions'][0]
             
     m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = pop_best
 
     m_dry = 150#m_dry_max
     event_alt *= event_alt_max
     GT_angle = np.pi/2 - GT_angle*5*np.pi/180
-    stage_mass_ratios = np.array([1.0,(stage_mass_ratios*0.15+0.05)])
-    stage_m_dots = np.array([1.0,stage_m_dots])
+    stage_m_dots = np.array([stage_mass_ratios,stage_m_dots])
+    stage_mass_ratios = np.array([1.0,(0.1)])
     stage_delta_vee_ratios = np.array([stage_delta_vee_ratios1,stage_delta_vee_ratios2])/(stage_delta_vee_ratios1 + stage_delta_vee_ratios2)
     
-    v, phi, r, theta, m, t, ind, grav_delta_vee = run_last(pop_best, np.array([0,0,0]), m_dry_max, event_alt_max)
+    v, phi, r, theta, m, t, ind, grav_delta_vee = run_last(pop_best, np.array([0,0,0]), m_dry_max, event_alt_max, alpha)
     ind_burn = ind + 2000 - 4
