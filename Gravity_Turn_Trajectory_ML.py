@@ -335,6 +335,8 @@ def run_trajectory_final(m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle
 
 if __name__ == "__main__":
     
+    import time
+    start_t = time.time()
 #    plt.close('all')
     alpha = -7.5*np.pi/180
     coast_on = False
@@ -367,6 +369,9 @@ if __name__ == "__main__":
     y = r*np.sin(theta)
     
     grav_delta_vee = np.sum(g*np.cos(phi[:-1])*(t[1:] - t[:-1]))
+    
+    total_time = time.time() - start_t 
+    print(total_time)
     
     plt.figure()
     plt.plot(x/1000,(y)/1000)

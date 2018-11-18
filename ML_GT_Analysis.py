@@ -251,8 +251,8 @@ if __name__ == "__main__":
     plt.close('all')
     
     already_run = False
-    ready_for_refine = False
-    ready_for_refine2 = False
+    ready_for_refine = True
+    ready_for_refine2 = True
     n_inputs = 8
     factor = 1
     
@@ -268,7 +268,7 @@ if __name__ == "__main__":
     perc_selected = 0.4
     mutation_chance = 1.0
     
-    generations = 5
+    generations = 50
     samples = 1
     m_dry_max = 0.5e3
     event_alt_max = 5e3
@@ -290,34 +290,34 @@ if __name__ == "__main__":
             pop_best = pop_ref_all['actions'][0]
             ready_for_refine = True
     
-#    if ready_for_refine == True:
-#        factor = 0.1
-#        if already_run == False:
-#            generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max, factor, True, alpha_max)
-#            pop_best = pop['actions'][0]
-#            
-#            filename = 'Population_Results_Refine_1.npy'
-#            np.save(filename, pop)
-#            ready_for_refine2 = True
-#        else:
-#            filename = 'Population_Results.npy'
-#            pop_ref_all = np.load(filename).item()
-#            pop_best = pop_ref_all['actions'][0]
-#            ready_for_refine2 = True
-#            
-#
-#    if ready_for_refine2 == True:
-#        factor = 0.01
-#        if already_run == False:
-#            generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max, factor, True, alpha_max)
-#            pop_best = pop['actions'][0]
-#            
-#            filename = 'Population_Results_Refine_2.npy'
-#            np.save(filename, pop)
-#        else:
-#            filename = 'Population_Results.npy'
-#            pop_ref_all = np.load(filename).item()
-#            pop_best = pop_ref_all['actions'][0]
+    if ready_for_refine == True:
+        factor = 0.1
+        if already_run == False:
+            generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max, factor, True, alpha_max)
+            pop_best = pop['actions'][0]
+            
+            filename = 'Population_Results_Refine_1.npy'
+            np.save(filename, pop)
+            ready_for_refine2 = True
+        else:
+            filename = 'Population_Results.npy'
+            pop_ref_all = np.load(filename).item()
+            pop_best = pop_ref_all['actions'][0]
+            ready_for_refine2 = True
+            
+
+    if ready_for_refine2 == True:
+        factor = 0.01
+        if already_run == False:
+            generation_stats, pop, v, phi, r, theta, m, t, ind, grav_delta_vee = n_d_runfile(W_vel, W_alt, W_angle, perc_elite, perc_lucky, perc_mutation, perc_selected, mutation_chance, samples, generations, m_dry_max, event_alt_max, factor, True, alpha_max)
+            pop_best = pop['actions'][0]
+            
+            filename = 'Population_Results_Refine_2.npy'
+            np.save(filename, pop)
+        else:
+            filename = 'Population_Results.npy'
+            pop_ref_all = np.load(filename).item()
+            pop_best = pop_ref_all['actions'][0]
             
     m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2,alpha = pop_best
 
