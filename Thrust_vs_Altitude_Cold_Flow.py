@@ -46,10 +46,10 @@ def thrust_output(P_variation,P_comb,gamma,P_design,thrust_design,A_exit,aerospi
         P_difference = P_design - P_variation  
         thrust = thrust_design + P_difference*A_exit
         
-        if P_variation[0] > P_design*2*3:
-            ind = np.where(P_variation[P_variation > P_design*2*3])[0][-1]
-        
-            thrust[:ind] = thrust[ind+1]
+#        if P_variation[0] > P_design*2*3:
+#            ind = np.where(P_variation[P_variation > P_design*2*3])[0][-1]
+#        
+#            thrust[:ind] = thrust[ind+1]
      
     return thrust
     
@@ -211,7 +211,7 @@ if __name__ == "__main__":
     ## Constants
     R_star = 8.314459848
     Molar_mass = 28.9645e-3
-    R = 287
+    R = 287.06
     gamma = 1.4
     P_SL = 101325
     T_SL = 288
@@ -219,15 +219,15 @@ if __name__ == "__main__":
     
     alt_steps = 10001
     
-    m_dot_design = 1.19
+    m_dot_design = 1#1.185#1.19276 (PR50)
     T_combustion = 300
-    P_comb = 5*P_SL
+    P_comb = 500000
     
     altitudes = np.linspace(0,100e3,alt_steps)
     P_variation, altitudes = pressure_variation(altitudes,g_0,R)
 
     ## Bell
-    P_design_bell = 10e3
+    P_design_bell = 2.5e3#2.5e3#
     design_altitude_bell_ind = np.where(abs(P_variation-P_design_bell) == np.min(abs(P_variation-P_design_bell)))[0][0]
     design_alt_bell = altitudes[design_altitude_bell_ind]
     
@@ -244,7 +244,7 @@ if __name__ == "__main__":
     plt.plot(altitudes,bell_thrust)
     
     ## Aerospike
-    P_design_aero = 10e3
+    P_design_aero = 2.5e3#2.5e3#
     design_altitude_aero_ind = np.where(abs(P_variation-P_design_aero) == np.min(abs(P_variation-P_design_aero)))[0][0]
     design_alt_aero = altitudes[design_altitude_aero_ind]
     
@@ -256,7 +256,30 @@ if __name__ == "__main__":
     A_ratio, Mj, Tj = area_ratio_calc(P_comb,P_variation,gamma,T_combustion)
     v_e = exhaust_velocity(gamma,R,Tj,Mj)
     aerospike_thrust = m_dot_design*v_e
+    
+    aerospike_Isp = aerospike_thrust/g_0
+    bell_Isp = bell_thrust/g_0
+    
+    PRs_tested = [5,10,25,50,100,200,500]
+    inds_tested = np.zeros(np.shape(PRs_tested)).astype(int)
+    for i,PR in enumerate(PRs_tested):
+        inds_tested[i] = int(np.where(abs(P_variation-P_comb/PR) == np.min(abs(P_variation-P_comb/PR)))[0][0])
+        
+    aero_isp_tested = aerospike_Isp[inds_tested]
+    bell_isp_tested = bell_Isp[inds_tested]
+    
+    ### Design PR = 50
+    ###aero_cfd = np.array([519.093/1.1829,621.831/1.1829,697.164/1.1829,753.985/1.1924,767.746/1.1829,770/1.1832,788.994/1.1832])/g_0
+    ####bell_cfd = np.array([287.5,549.7,709.1,762.4,789.0,800,810.3])/(1.1930*g_0)
 
+    ### Design PR = 200
+    aero_cfd = np.array([,,,,,,])/g_0
+    bell_cfd = np.array([287.5,549.7,709.1,762.4,789.0,800,810.3])/(1.1930*g_0)
+
+
+    cfd_diff = (bell_cfd-aero_cfd)/bell_cfd*100
+    aero_diff = (aero_isp_tested-aero_cfd)/aero_isp_tested*100
+    bell_diff = (bell_isp_tested-bell_cfd)/bell_isp_tested*100
 
 #    thrust = thrust_output(P_variation,P_comb,gamma,P_design,aerospike_thrust,A_exit,True)
     plt.plot(altitudes,aerospike_thrust)
