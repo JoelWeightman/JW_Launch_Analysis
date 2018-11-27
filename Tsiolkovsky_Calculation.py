@@ -6,6 +6,7 @@ Created on Sat Nov 24 13:44:27 2018
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def set_constants():
@@ -29,24 +30,30 @@ def set_rocket_props(accel_init, g_0, G_c, M_e, R_e, R_air, R_prop, engine):
     gamma = 1.138
     T_comb = 3885
     P_comb = 6e6
-        
-    altitude_design = 16.2e3
-    Isp_design = 350
-    thrust_design = 10000
-    m_dot, A_exit, P_design = m_dot_design(thrust_design, altitude_design, P_comb, T_comb, gamma, R_air, R_prop, g_0)
     
-    thrust_SL = thrust_current(0, m_dot, P_comb, P_design, T_comb, gamma, R_air, R_prop, g_0, A_exit, 'bell')
-    rocket_diam = 0.1
-    Cd = 0.2
     target_altitude = 300e3
     
     orbital_vel = np.sqrt(G_c*M_e/(R_e+target_altitude))
-    delta_vee_drag = 150
-    delta_vee_gravity = 2500
+    delta_vee_drag = 000
+    delta_vee_gravity = 0000
     
     delta_vee_req = orbital_vel + delta_vee_gravity + delta_vee_drag
+    Isp_design = 350
+    m_payload_estimate_bell = 10
     
-    m_init = thrust_SL/((1+accel_init)*g_0)
+    m_init = m_payload_estimate_bell*np.exp(delta_vee_req/(Isp_design*g_0))
+        
+    altitude_design = 16.2e3
+    thrust_design = 1#thrust_current(altitude_design, m_dot, P_comb, P_design, T_comb, gamma, R_air, R_prop, g_0, A_exit, 'bell')
+    m_dot, A_exit, P_design = m_dot_design(thrust_design, altitude_design, P_comb, T_comb, gamma, R_air, R_prop, g_0)
+    thrust_ratio = thrust_current(0, m_dot, P_comb, P_design, T_comb, gamma, R_air, R_prop, g_0, A_exit, 'bell')
+        
+    thrust_design = (1+accel_init)*m_init*g_0/thrust_ratio
+    m_dot, A_exit, P_design = m_dot_design(thrust_design, altitude_design, P_comb, T_comb, gamma, R_air, R_prop, g_0)
+    thrust_SL = thrust_current(0, m_dot, P_comb, P_design, T_comb, gamma, R_air, R_prop, g_0, A_exit, 'bell')
+    
+    rocket_diam = 0.1
+    Cd = 0.2
       
     return delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, P_design, A_exit
     
@@ -79,7 +86,7 @@ def Mach_number(P1,P2,gamma):
     
     return M
 
-def current_pressure(alt,g,R):
+def current_pressure(alt,g_0,R):
     
     h = np.array([0,11e3,20e3,32e3,47e3,51e3,71e3])
     P = np.array([101325.0,22632.1,5474.89,868.02,110.91,66.94,3.96])
@@ -101,18 +108,19 @@ def current_pressure(alt,g,R):
             ind -= 1
     
         if L[ind] == 0:
-            P_var = P[ind]*np.exp(-g*(alt-h[ind])/(R*T[ind]))
+            P_var = P[ind]*np.exp(-g_0*(alt-h[ind])/(R*T[ind]))
             T_var = T[ind]
         else:
-            P_var = P[ind]*(T[ind]/(T[ind]+L[ind]*(alt-h[ind])))**(g/(R*L[ind]))
+            P_var = P[ind]*(T[ind]/(T[ind]+L[ind]*(alt-h[ind])))**(g_0/(R*L[ind]))
             T_var = T[ind]+L[ind]*(alt-h[ind])
             
         rho_var = P_var/(R*T_var)
         return P_var, T_var, rho_var
 
-def thrust_current(alt,m_dot,P_chamber,P_design,T_chamber,gamma,R_air,R_prop,g,A_exit,engine):
+def thrust_current(alt,m_dot,P_chamber,P_design,T_chamber,gamma,R_air,R_prop,g_0,A_exit,engine):
     
-    P_alt,T_alt,rho_alt = current_pressure(alt,g,R_air)
+    P_alt,T_alt,rho_alt = current_pressure(alt,g_0,R_air)
+     
     
     if engine == 'bell':
         
@@ -132,29 +140,29 @@ def thrust_current(alt,m_dot,P_chamber,P_design,T_chamber,gamma,R_air,R_prop,g,A
     
     return thrust
 
-def m_dot_design(thrust_design,alt,P_chamber,T_chamber,gamma,R_air,R_prop,g):
+def m_dot_design(thrust_design,alt,P_chamber,T_chamber,gamma,R_air,R_prop,g_0):
 
-    P_alt,T_alt,rho_alt = current_pressure(alt,g,R_air)
+    P_alt,T_alt,rho_alt = current_pressure(alt,g_0,R_air)
     
     AR, M, T = area_ratio_calc(P_chamber,P_alt,gamma,T_chamber)
     
     v_e = exhaust_velocity(gamma,R_prop,T,M)
-        
+    
     m_dot = thrust_design/v_e
     
     rho = P_alt/(T*R_prop)
     
     A_exit = m_dot/(rho*v_e)
-    
+   
     return m_dot, A_exit, P_alt
 
-def altitude_current(target_altitude):
+def generate_path(target_altitude):
     
     h_pre_turn = 2e3
     alt_steps = 1000
 
     y_end = target_altitude
-    x_end = target_altitude/2
+    x_end = target_altitude/3
     
     y = np.concatenate((np.array([0]),np.linspace(h_pre_turn,y_end,alt_steps)))
     x_circ = -(1-((y[1:]-h_pre_turn)/(y_end-h_pre_turn))**2)**(1/2)*x_end+x_end
@@ -171,6 +179,11 @@ def altitude_current(target_altitude):
     path[:,0] = y
     path[:,1] = path_distance
     path[:,2] = path_angle
+    
+    plt.figure()
+    plt.plot(x,y)
+    plt.axis('equal')
+    
     
     return path
 
@@ -235,7 +248,7 @@ def density_calc(h):
     
     
 
-def Tsiolkovsky(g, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, t_steps, P_design, A_exit, engine, path):
+def Tsiolkovsky(g_0, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, t_steps, P_design, A_exit, engine, path):
     
     eps = m_init*1e-6
     
@@ -269,13 +282,13 @@ def Tsiolkovsky(g, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thr
             i += 1
             
             drag_bell[i],phi,altitude_bell[i] = get_drag_angle(distance_bell[i-1],velocity_bell[i-1],path,Cd,rocket_diam)
-            thrust_bell[i] = thrust_current(altitude_bell[i],m_dot,P_comb, P_design, T_comb, gamma, R_air, R_prop, g, A_exit, 'bell')
+            thrust_bell[i] = thrust_current(altitude_bell[i],m_dot,P_comb, P_design, T_comb, gamma, R_air, R_prop, g_0, A_exit, 'bell')
             
             m[i] = m[i-1] - m_dot*dt
             if m[i] < 0:
                 break
             
-            v_prime = (thrust_bell[i] - drag_bell[i])/m[i] - g*np.sin(phi)
+            v_prime = (thrust_bell[i] - drag_bell[i])/m[i] - g_0*np.sin(phi)
             velocity_bell[i] = velocity_bell[i-1] + v_prime*dt
             distance_bell[i] = distance_bell[i-1] + velocity_bell[i]*dt
             
@@ -297,8 +310,8 @@ def Tsiolkovsky(g, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thr
             i += 1
             
             drag_spike[i],phi,altitude_spike[i] = get_drag_angle(distance_spike[i-1],velocity_spike[i-1],path,Cd,rocket_diam)
-            thrust_bell[i] = thrust_current(altitude_spike[i],m_dot,P_comb, P_design, T_comb, gamma, R_air, R_prop, g, A_exit, 'bell')
-            thrust_spike[i] = thrust_current(altitude_spike[i],m_dot,P_comb, P_design, T_comb, gamma, R_air, R_prop, g, A_exit, 'spike')
+            thrust_bell[i] = thrust_current(altitude_spike[i],m_dot,P_comb, P_design, T_comb, gamma, R_air, R_prop, g_0, A_exit, 'bell')
+            thrust_spike[i] = thrust_current(altitude_spike[i],m_dot,P_comb, P_design, T_comb, gamma, R_air, R_prop, g_0, A_exit, 'spike')
             
             m_dot_spike[i] = m_dot*thrust_bell[i]/thrust_spike[i]
             m[i] = m[i-1] - m_dot_spike[i]*dt
@@ -306,7 +319,7 @@ def Tsiolkovsky(g, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thr
             if m[i] < 0:
                 break
             
-            v_prime = (thrust_bell[i] - drag_spike[i])/m[i] - g*np.sin(phi)
+            v_prime = (thrust_bell[i] - drag_spike[i])/m[i] - g_0*np.sin(phi)
             velocity_spike[i] = velocity_spike[i-1] + v_prime*dt
             distance_spike[i] = distance_spike[i-1] + velocity_spike[i]*dt
             
@@ -329,13 +342,13 @@ def Tsiolkovsky(g, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thr
     
 if __name__ == "__main__":
     
-    accel_init = 0.50 ## in gees
+    accel_init = 0.250 ## in gees
     engine = 'bell'
     
     g_0, G_c, M_e, R_e, R_air, R_prop, t_steps = set_constants()
     delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, P_design, A_exit = set_rocket_props(accel_init, g_0, G_c, M_e, R_e, R_air, R_prop, engine)
     
-    path = altitude_current(target_altitude)
+    path = generate_path(target_altitude)
     
     m_payload_bell, v_e, delta_vee_bell, thrust_bell, temp, m_bell, drag_bell, temp, velocity_bell, temp, altitude_bell, temp, temp = Tsiolkovsky(g_0,delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, t_steps, P_design, A_exit, engine, path)
 
@@ -345,5 +358,5 @@ if __name__ == "__main__":
     delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, P_design, A_exit = set_rocket_props(accel_init, g_0, G_c, M_e, R_e, R_air, R_prop, engine)
     
     m_payload_spike, v_e, temp, temp, thrust_spike, m_spike, temp, drag_spike, temp, velocity_spike, temp, altitude_spike, m_dot_spike = Tsiolkovsky(g_0,delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, t_steps, P_design, A_exit, engine, path)
-    print('Bell Max Payload = %3.3fkg' % m_payload_bell)
-    print('Spike Max Payload = %3.3fkg' % m_payload_spike)
+    print('Bell Max Payload Percentage = %3.3f' % (m_payload_bell/m_init*100))
+    print('Spike Max Payload Percentage = %3.3f' % (m_payload_spike/m_init*100))
