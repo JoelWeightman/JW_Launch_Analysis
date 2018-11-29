@@ -55,7 +55,7 @@ def set_rocket_props(accel_init, g_0, G_c, M_e, R_e, R_air, R_prop, engine):
     rocket_diam = 0.1
     Cd = 0.2
       
-    return delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, P_design, A_exit
+    return delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, P_design, A_exit, orbital_vel
     
 def area_ratio_calc(P1,P2,gamma,T1):
     
@@ -248,7 +248,7 @@ def density_calc(h):
     
     
 
-def Tsiolkovsky(g_0, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, t_steps, P_design, A_exit, engine, path):
+def Tsiolkovsky(g_0, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, t_steps, P_design, A_exit, engine, path, orbital_vel):
     
     eps = m_init*1e-6
     
@@ -301,7 +301,8 @@ def Tsiolkovsky(g_0, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, t
             
             
         delta_vee = np.cumsum(delta_vee_seg)
-        ind = np.where(abs(delta_vee-delta_vee_req) == np.min(abs(delta_vee-delta_vee_req)))[0][0]
+        ind = np.where(abs(velocity_bell-orbital_vel) == np.min(abs(velocity_bell-orbital_vel)))[0][0]
+#        ind = np.where(abs(delta_vee-delta_vee_req) == np.min(abs(delta_vee-delta_vee_req)))[0][0]
 #        ind = np.where(abs(altitude_bell-target_altitude) == np.min(abs(altitude_bell-target_altitude)))[0][0]
         m_payload = m[ind]
                 
@@ -313,13 +314,13 @@ def Tsiolkovsky(g_0, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, t
             thrust_bell[i] = thrust_current(altitude_spike[i],m_dot,P_comb, P_design, T_comb, gamma, R_air, R_prop, g_0, A_exit, 'bell')
             thrust_spike[i] = thrust_current(altitude_spike[i],m_dot,P_comb, P_design, T_comb, gamma, R_air, R_prop, g_0, A_exit, 'spike')
             
-            m_dot_spike[i] = m_dot*thrust_bell[i]/thrust_spike[i]
+            m_dot_spike[i] = m_dot#*thrust_bell[i]/thrust_spike[i]
             m[i] = m[i-1] - m_dot_spike[i]*dt
             
             if m[i] < 0:
                 break
             
-            v_prime = (thrust_bell[i] - drag_spike[i])/m[i] - g_0*np.sin(phi)
+            v_prime = (thrust_spike[i] - drag_spike[i])/m[i] - g_0*np.sin(phi)
             velocity_spike[i] = velocity_spike[i-1] + v_prime*dt
             distance_spike[i] = distance_spike[i-1] + velocity_spike[i]*dt
             
@@ -328,12 +329,11 @@ def Tsiolkovsky(g_0, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, t
             if altitude_spike[i] >= target_altitude:
                 break
             
-            
-            
             delta_vee_seg[i] = v_e[i]*np.log(m[i-1]/(m[i]))
             
         delta_vee = np.cumsum(delta_vee_seg)
-        ind = np.where(abs(delta_vee-delta_vee_req) == np.min(abs(delta_vee-delta_vee_req)))[0][0]
+        ind = np.where(abs(velocity_spike-orbital_vel) == np.min(abs(velocity_spike-orbital_vel)))[0][0]
+#        ind = np.where(abs(delta_vee-delta_vee_req) == np.min(abs(delta_vee-delta_vee_req)))[0][0]
 #        ind = np.where(abs(altitude_spike-target_altitude) == np.min(abs(altitude_spike-target_altitude)))[0][0]
         m_payload = m[ind]
         
@@ -342,28 +342,35 @@ def Tsiolkovsky(g_0, delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, t
     
 if __name__ == "__main__":
     
-    accel_init = 0.250 ## in gees
+    plt.close('all')
+    accel_init = 1.00 ## in gees
     engine = 'bell'
     
     g_0, G_c, M_e, R_e, R_air, R_prop, t_steps = set_constants()
-    delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, P_design, A_exit = set_rocket_props(accel_init, g_0, G_c, M_e, R_e, R_air, R_prop, engine)
+    delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, P_design, A_exit, orbital_vel = set_rocket_props(accel_init, g_0, G_c, M_e, R_e, R_air, R_prop, engine)
     
     path = generate_path(target_altitude)
     
-    m_payload_bell, v_e, delta_vee_bell, thrust_bell, temp, m_bell, drag_bell, temp, velocity_bell, temp, altitude_bell, temp, temp = Tsiolkovsky(g_0,delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, t_steps, P_design, A_exit, engine, path)
+    m_payload_bell, v_e, delta_vee_bell, thrust_bell, temp, m_bell, drag_bell, temp, velocity_bell, temp, altitude_bell, temp, temp = Tsiolkovsky(g_0,delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, t_steps, P_design, A_exit, engine, path, orbital_vel)
 
     
     engine = 'spike'
     
-    delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, P_design, A_exit = set_rocket_props(accel_init, g_0, G_c, M_e, R_e, R_air, R_prop, engine)
+    delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, P_design, A_exit, orbital_vel = set_rocket_props(accel_init, g_0, G_c, M_e, R_e, R_air, R_prop, engine)
     
-    m_payload_spike, v_e, delta_vee_spike, temp, thrust_spike, m_spike, temp, drag_spike, temp, velocity_spike, temp, altitude_spike, m_dot_spike = Tsiolkovsky(g_0,delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, t_steps, P_design, A_exit, engine, path)
+    m_payload_spike, v_e, delta_vee_spike, temp, thrust_spike, m_spike, temp, drag_spike, temp, velocity_spike, temp, altitude_spike, m_dot_spike = Tsiolkovsky(g_0,delta_vee_req, m_init, gamma, T_comb, P_comb, Isp_design, thrust_design, thrust_SL, rocket_diam, Cd, target_altitude, altitude_design, m_dot, t_steps, P_design, A_exit, engine, path, orbital_vel)
     print('Bell Max Payload Percentage = %3.3f' % (m_payload_bell/m_init*100))
     print('Spike Max Payload Percentage = %3.3f' % (m_payload_spike/m_init*100))
     
     ind_bell = np.where(abs(delta_vee_bell-delta_vee_req) == np.min(abs(delta_vee_bell-delta_vee_req)))[0][0]
     ind_spike = np.where(abs(delta_vee_spike-delta_vee_req) == np.min(abs(delta_vee_spike-delta_vee_req)))[0][0]
     
-    print('Bell velocity = %3.3f' % velocity_bell[ind_bell])
-    print('Spike velocity = %3.3f' % velocity_spike[ind_spike])
+    
+    ind_bell = np.where(abs(velocity_bell-orbital_vel) == np.min(abs(velocity_bell-orbital_vel)))[0][0]
+    ind_spike = np.where(abs(velocity_spike-orbital_vel) == np.min(abs(velocity_spike-orbital_vel)))[0][0]
+
+    
+    
+    print('Bell delta vee = %3.3f' % delta_vee_bell[ind_bell])
+    print('Spike delta vee = %3.3f' % delta_vee_spike[ind_spike])
     

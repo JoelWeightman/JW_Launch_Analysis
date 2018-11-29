@@ -161,25 +161,26 @@ def set_variables(m_dry, stage_mass_ratios, stage_m_dots):
     Molar_mass = 28.9645e-3
     R_air = R_star/Molar_mass
     R_prop = 280
-    gamma = 1.15
+    gamma = 1.14
     T_chamber = 3850
     P_chamber = 6e6
     
     t_steps = 1000
     Isp_design = 350
-    thrust_design = 50000
+    thrust_design = 300000
+    m_dot_estimate = thrust_design/(Isp_design*g)
     rocket_diam = 0.5
-    Cd = 0.2
-    target_altitude = 300e3
+    Cd = 0.0
+    target_altitude = 200e3
     
     orbital_vel = np.sqrt(G_c*M_e/(R_e+target_altitude))
     delta_vee_drag = 150
-    delta_vee_gravity = 3000
+    delta_vee_gravity = 1500
     
     delta_vee_req = orbital_vel + delta_vee_gravity + delta_vee_drag
     
     stage_m_dry = np.array(m_dry*stage_mass_ratios)
-    stage_m_dot = np.array(stage_m_dots)*10
+    stage_m_dot = np.array(stage_m_dots)*m_dot_estimate
 
     return g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_diam, Cd, target_altitude, delta_vee_req, stage_m_dry, stage_m_dot, orbital_vel, R_air, R_prop, gamma, P_chamber, T_chamber
 

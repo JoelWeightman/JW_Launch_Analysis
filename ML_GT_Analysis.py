@@ -30,7 +30,7 @@ def calculate_result(pop, weights, m_dry_max, event_alt_max, alpha_max, factor, 
         else:
             m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2,alpha = pop['actions'][i,:]
 
-        m_dry = 150#m_dry_max
+        m_dry *= m_dry_max
         event_alt *= event_alt_max
         GT_angle = np.pi/2 - GT_angle*5*np.pi/180
         stage_m_dots = np.array([stage_mass_ratios,stage_m_dots])
@@ -82,7 +82,7 @@ def run_last(pop, weights, m_dry_max, event_alt_max, alpha_max):
     m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2,alpha = pop 
 #        m_dry,stage_mass_ratios,stage_m_dots,event_alt,GT_angle,stage_delta_vee_ratios1,stage_delta_vee_ratios2 = [0.2417085,  0.35612504, 0.01455789, 0.6628106,  0.48791092, 0.82595287, 0.31411318]
         
-    m_dry = 150#m_dry_max
+    m_dry *= m_dry_max
     event_alt *= event_alt_max
     GT_angle = np.pi/2 - GT_angle*5*np.pi/180
     stage_m_dots = np.array([stage_mass_ratios,stage_m_dots])
@@ -103,14 +103,14 @@ def init_population(pop):
 def pop_selection(pop, selection_num):
     
     sorted_pop = np.argsort(pop['score'])[::-1]
-    print(sorted_pop[0])
-    print(pop['actions'][0])
-    print(pop['actions'][sorted_pop[0]])
-    if sorted_pop[0] != 0:
-        print(pop['score'][0])
-        print(pop['score'][sorted_pop[0]])
-        
-        print('Oh NOOOOOOOO')
+#    print(sorted_pop[0])
+#    print(pop['actions'][0])
+#    print(pop['actions'][sorted_pop[0]])
+#    if sorted_pop[0] != 0:
+#        print(pop['score'][0])
+#        print(pop['score'][sorted_pop[0]])
+#        
+#        print('Oh NOOOOOOOO')
     elite_pop = sorted_pop[:selection_num[0]]
     lucky_pop = np.random.choice(sorted_pop[selection_num[1]:],size = selection_num[2], replace = False)
     
@@ -256,19 +256,19 @@ if __name__ == "__main__":
     n_inputs = 8
     factor = 1
     
-    pop_size = 1000
-    W_vel = 0.25
+    pop_size = 500
+    W_vel = 0.4
     W_alt = 0.25
     W_angle = 1.0
     
     ## Other Set Params
-    perc_elite = 0.2
+    perc_elite = 0.1
     perc_lucky = 0.05
-    perc_mutation = 0.35
-    perc_selected = 0.4
+    perc_mutation = 0.8
+    perc_selected = 0.9
     mutation_chance = 1.0
     
-    generations = 50
+    generations = 100
     samples = 1
     m_dry_max = 0.5e3
     event_alt_max = 5e3
