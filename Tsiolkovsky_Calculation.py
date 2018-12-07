@@ -39,7 +39,7 @@ def set_rocket_props(accel_init, g_0, G_c, M_e, R_e, R_air, R_prop, engine):
     
     delta_vee_req = orbital_vel + delta_vee_gravity + delta_vee_drag
     Isp_design = 350
-    m_payload_estimate_bell = 10
+    m_payload_estimate_bell = 55
     
     m_init = m_payload_estimate_bell*np.exp(delta_vee_req/(Isp_design*g_0))
         
@@ -48,7 +48,8 @@ def set_rocket_props(accel_init, g_0, G_c, M_e, R_e, R_air, R_prop, engine):
     m_dot, A_exit, P_design = m_dot_design(thrust_design, altitude_design, P_comb, T_comb, gamma, R_air, R_prop, g_0)
     thrust_ratio = thrust_current(0, m_dot, P_comb, P_design, T_comb, gamma, R_air, R_prop, g_0, A_exit, 'bell')
         
-    thrust_design = (1+accel_init)*m_init*g_0/thrust_ratio
+#    THIS IS WRONG
+    thrust_design = (1+accel_init)*m_init*g_0/thrust_ratio ###############
     m_dot, A_exit, P_design = m_dot_design(thrust_design, altitude_design, P_comb, T_comb, gamma, R_air, R_prop, g_0)
     thrust_SL = thrust_current(0, m_dot, P_comb, P_design, T_comb, gamma, R_air, R_prop, g_0, A_exit, 'bell')
     
@@ -65,14 +66,6 @@ def area_ratio_calc(P1,P2,gamma,T1):
     A_R = ((gamma+1)/2)**(-(gamma+1)/(2*(gamma-1)))*((1+(gamma-1)/2*M**2)**((gamma+1)/(2*(gamma-1)))/M)
 
     return A_R, M, T
-
-def exit_area(A_ratio,d_throat):
-    
-    A_throat = (d_throat/2)**2*np.pi
-    
-    A_exit = A_throat*A_ratio
-    
-    return A_exit
 
 def exhaust_velocity(gamma,R,T,Mj):
     
