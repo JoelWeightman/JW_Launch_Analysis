@@ -186,7 +186,7 @@ def set_variables(m_dry, stage_mass_ratios):
     P_chamber = 6e6
     
     t_steps = 1000
-    rocket_radius = 0.5
+    rocket_radius = 0.25
     Cd = 0.2
     target_altitude = 300e3
     
@@ -231,6 +231,7 @@ def calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stag
         
         
         ### First Stage
+#        print(stage_m_init, accel_init)
         thrust_design = (stage_m_init[0]*g)*(1+accel_init[0]) # At sea level
         stage_m_dot = np.zeros(2)
         t_burn = np.zeros(2)
@@ -247,8 +248,11 @@ def calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stag
         x = r*np.cos(theta)
         y = r*np.sin(theta)
         
-        ind = np.where(np.abs(r-event_alt-R_e) == np.min(np.abs(r-event_alt-R_e)))[0][0]
-        
+        try:
+            ind = np.where(np.abs(r-event_alt-R_e) == np.min(np.abs(r-event_alt-R_e)))[0][0]
+        except IndexError as error:
+            ind = 1
+            
         if ind == 0:
             ind = 1
         
@@ -321,31 +325,37 @@ def trajectory_score(v,phi,r,m,R_e,target_altitude,orbital_vel,weights):
     m_initial = m[0]
     
     target_angle = 0
-    vel_adj = 5
-    alt_adj = 10
-    ang_adj = 10
-    mass_adj = 1000
+    vel_adj = 10
+    alt_adj = 1e3
+    ang_adj = 1*np.pi/180
+    mass_adj = 100
     
-    vel_factor = abs(v_final - orbital_vel)/(orbital_vel/vel_adj)
-    alt_factor = abs(alt_final - target_altitude)/(target_altitude/alt_adj)
-    angle_factor = abs(angle_final - target_angle)/(np.pi/ang_adj)
+    vel_factor = abs(v_final - orbital_vel)/(vel_adj)
+    alt_factor = abs(alt_final - target_altitude)/(alt_adj)
+    angle_factor = abs(angle_final - target_angle)/(ang_adj)
     
     mass_score = abs(m_initial)/mass_adj
     
-    score = (weights[0] - vel_factor*weights[0]) + (weights[1] - alt_factor*weights[1]) +(weights[2] - angle_factor*weights[2]) + (weights[3] - mass_score*weights[3])
+    score = (vel_factor*weights[0]) + (alt_factor*weights[1]) +(angle_factor*weights[2]) + (mass_score*weights[3])
     
+    print(score)      
+    
+        
     return score, [v_final, alt_final, angle_final, m_initial]
 
-def run_trajectory(m_dry,stage_mass_ratios,event_alt,GT_angle,stage_delta_vee_ratios,weights,alpha,accel_init):
+def run_trajectory(inputs,m_dry,stage_mass_ratios,GT_angle,weights):
     
+    [stage_delta_vee_ratios_1,stage_delta_vee_ratios_2,event_alt,accel_init_1,accel_init_2,alpha] = inputs
+    stage_delta_vee_ratios = np.array([stage_delta_vee_ratios_1,stage_delta_vee_ratios_2])
+    accel_init = np.array([accel_init_1,accel_init_2])
     g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_radius, Cd, target_altitude, delta_vee_req, stage_m_dry, orbital_vel, R_air, R_prop, gamma, P_chamber, T_chamber = set_variables(m_dry, stage_mass_ratios)
     v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_radius, Cd, event_alt, GT_angle, R_air, R_prop, gamma, P_chamber, T_chamber, alpha, accel_init)
    
-    score = trajectory_score(v,phi,r,m,R_e,target_altitude,orbital_vel,weights)
+    score, results = trajectory_score(v,phi,r,m,R_e,target_altitude,orbital_vel,weights)
     
     return score
 
-def run_trajectory_final(m_dry,stage_mass_ratios,event_alt,GT_angle,stage_delta_vee_ratios,weights,alpha,accel_init):
+def run_trajectory_final(stage_delta_vee_ratios,m_dry,stage_mass_ratios,event_alt,GT_angle,weights,alpha,accel_init):
     
     g, G_c, M_e, R_e, t_steps, Isp_design, thrust_design, rocket_radius, Cd, target_altitude, delta_vee_req, stage_m_dry, orbital_vel, R_air, R_prop, gamma, P_chamber, T_chamber = set_variables(m_dry, stage_mass_ratios)
     v, phi, r, theta, m, t, ind = calculate_trajectory(delta_vee_req, stage_delta_vee_ratios, Isp_design, stage_m_dry, t_steps, g, G_c, M_e, R_e, thrust_design, rocket_radius, Cd, event_alt, GT_angle, R_air, R_prop, gamma, P_chamber, T_chamber, alpha, accel_init, True)
@@ -401,6 +411,7 @@ def run_trajectory_final(m_dry,stage_mass_ratios,event_alt,GT_angle,stage_delta_
     print('Burn End Position Tangent = {} degrees'.format((np.arctan2(y,x)[p3]-np.pi/2)*180/np.pi))
     print('Burn End Altitude = {}km'.format((np.sqrt(x**2 + y**2)-R_e)[p3]/1000))
     print('Burn End Velocity = {}m/s'.format(v[p3]))
+    print('Initial Mass = {}kg'.format(m[0]))
     
     return v, phi, r, theta, m, t, ind, grav_delta_vee, score
 

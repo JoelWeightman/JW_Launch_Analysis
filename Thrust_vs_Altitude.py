@@ -121,11 +121,11 @@ def set_constants(condition):
         P_comb = 500000
         gamma = 1.4
     elif condition == 'hot':
-        Molar_mass = 29.7226e-3
+        Molar_mass = 26e-3#29.7226e-3
         R = R_star/Molar_mass
-        T_comb = 3885
+        T_comb = 4000
         P_comb = 6000000
-        gamma = 1.138
+        gamma = 1.1
     
     return R, T_comb, P_comb, T_SL, P_SL, g_0, m_dot_design, altitudes, gamma
     
