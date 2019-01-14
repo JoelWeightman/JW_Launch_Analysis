@@ -333,12 +333,11 @@ def trajectory_score(v,phi,r,m,R_e,target_altitude,orbital_vel,weights):
     vel_factor = abs(v_final - orbital_vel)/(vel_adj)
     alt_factor = abs(alt_final - target_altitude)/(alt_adj)
     angle_factor = abs(angle_final - target_angle)/(ang_adj)
-    
     mass_score = abs(m_initial)/mass_adj
     
     score = (vel_factor*weights[0]) + (alt_factor*weights[1]) +(angle_factor*weights[2]) + (mass_score*weights[3])
     
-    print(score)      
+    print(weights)      
     
         
     return score, [v_final, alt_final, angle_final, m_initial]

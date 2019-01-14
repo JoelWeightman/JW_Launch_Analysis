@@ -34,7 +34,7 @@ def get_input_variables(m_dry_max, event_alt_max, GT_angle_max, alpha_max):
 
 def calculate_result(engine, weights, m_dry_max, event_alt_max, alpha_max, GT_angle_max, refine):
     
-    basin = True
+    basin = False
             
     m_dry, event_alt, GT_angle, stage_mass_ratios, stage_delta_vee_ratios, alpha, accel_init = get_input_variables(m_dry_max, event_alt_max, GT_angle_max, alpha_max)
     x_0 = np.array([stage_delta_vee_ratios[0],stage_delta_vee_ratios[1],event_alt,accel_init[0],accel_init[1],alpha])
@@ -55,9 +55,9 @@ def calculate_result(engine, weights, m_dry_max, event_alt_max, alpha_max, GT_an
             pop = optim.basinhopping(GT.run_trajectory, x_0, minimizer_kwargs = minimizer_kwargs)
     else:
         if engine == 'bell':
-            pop = optim.minimize(GT_bell.run_trajectory, x_0, bounds = bounds, args = (m_dry,stage_mass_ratios,GT_angle,weights), method='L-BFGS-B', tol=1e-3, options = {'disp':True})
+            pop = optim.minimize(GT_bell.run_trajectory, x_0, bounds = bounds, args = (m_dry,stage_mass_ratios,GT_angle,weights), method='L-BFGS-B', tol=1e-3, options = {'maxiter':200,'disp':True})
         else:
-            pop = optim.minimize(GT.run_trajectory, x_0, bounds = bounds, args = (m_dry,stage_mass_ratios,GT_angle,weights), method='L-BFGS-B', tol=1e-3, options = {'disp':True})
+            pop = optim.minimize(GT.run_trajectory, x_0, bounds = bounds, args = (m_dry,stage_mass_ratios,GT_angle,weights), method='Nelder-Mead', tol=1e-3, options = {'maxiter':500,'disp':True})
     
     return pop
 
@@ -89,10 +89,7 @@ def run_GT_analysis(W_0,optimize_me = True):
     
     plt.close('all')
 
-    already_run = False
-    ready_for_refine = False
-    ready_for_refine2 = True
-    
+
     global filename_num
     filename_num = 3
     
@@ -100,7 +97,7 @@ def run_GT_analysis(W_0,optimize_me = True):
           
     m_dry_max = 0.15e3
     event_alt_max = 5e3
-    alpha_max = -10 ## In degrees
+    alpha_max = -5 ## In degrees
     alpha_max*= np.pi/180
     GT_angle_max = 2
 
@@ -150,14 +147,25 @@ if __name__ == "__main__":
        
     optimize_weights = False
     
-    W_0 = np.array([0.25,0.25,2.0,0.25])
+    W_0 = np.array([0.6,0.25,2.0,0.5])
+    
+    wmin = [0.05,0.05,0.05,0.05]
+    wmax = [1,1,1,1]
+    
+    # rewrite the bounds in the way required by L-BFGS-B
+    bounds = [(low, high) for low, high in zip(wmin, wmax)] #bounds = bounds
+    
+    # use method L-BFGS-B because the problem is smooth and bounded
+    minimizer_kwargs = dict(method="L-BFGS-B", bounds = bounds,tol=2e-1, options = {'eps':5e-1,'maxiter':200,'disp':True})
+    
     
     if optimize_weights == True:
-        weights = optim.minimize(run_GT_analysis, W_0, method = 'L-BFGS-B', tol=1e-2, options = {'maxiter':100,'disp':True})
+#        weights = optim.minimize(run_GT_analysis, W_0, method = 'L-BFGS-B', tol=1e-2, options = {'maxiter':100,'disp':True})
+        weights = optim.basinhopping(run_GT_analysis, W_0, minimizer_kwargs = minimizer_kwargs)
         [W_vel, W_alt, W_angle, W_mass] = weights.x
     else:
         stage_delta_vee_ratios,event_alt,accel_init,alpha,v, phi, r, theta, m, t, ind, delta_vee_drag, delta_vee_grav, phi_range = run_GT_analysis(W_0,optimize_me = False)
     
-    
+    print(phi_range)
     
     
