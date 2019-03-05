@@ -95,11 +95,11 @@ def run_GT_analysis(W_0,optimize_me = True):
     
     engine = 'spike'
           
-    m_dry_max = 0.15e3
-    event_alt_max = 5e3
-    alpha_max = -5 ## In degrees
+    m_dry_max = 0.15e3 #Maximum dry mass
+    event_alt_max = 5e3 #Maximum height for start of turn
+    alpha_max = -5 ## maximum angle of attack In degrees
     alpha_max*= np.pi/180
-    GT_angle_max = 2
+    GT_angle_max = 2 #maximum initial angle at event location
 
     start_time = time.time()
     pop = n_d_runfile(engine, W_vel, W_alt, W_angle, W_mass, m_dry_max, event_alt_max, False, alpha_max, GT_angle_max)
@@ -147,6 +147,7 @@ if __name__ == "__main__":
        
     optimize_weights = False
     
+    #Set of weights for velocity, location, angle, and mass
     W_0 = np.array([0.6,0.25,2.0,0.5])
     
     wmin = [0.05,0.05,0.05,0.05]

@@ -131,7 +131,7 @@ def density_calc(h):
     return rho_curr
 
 def model_burn(variables,t,G_c,M_e,R_e,m_dot,thrust_design,rocket_radius,Cd,R_air,R_prop,gamma,P_chamber,T_chamber,alpha):
-    
+    ##https://mintoc.de/index.php/Gravity_Turn_Maneuver
     v,phi,r,theta,m,delta_vee_step = variables
     
     R_current = r

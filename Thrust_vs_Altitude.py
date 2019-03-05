@@ -167,9 +167,9 @@ def calculate_spike(P_design_aero, P_variation, P_comb, gamma, T_comb, R):
 
 if __name__ == "__main__":
   
-    condition = 'hot'
+    condition = 'cold'
     P_design_bell_alt = 16.2e3
-    P_design_aero_alt = 20.2e3
+    P_design_aero_alt = 16.2e3
     
     R, T_comb, P_comb, T_SL, P_SL, g_0, m_dot_design, altitudes, gamma = set_constants(condition)
     
@@ -183,9 +183,30 @@ if __name__ == "__main__":
     Isp_bell = bell_thrust/(m_dot_design*g_0)
     Isp_aero = aerospike_thrust/(m_dot_design*g_0)
     
-    plt.plot(altitudes,bell_thrust)
-    plt.plot(altitudes,aerospike_thrust)
-    plt.scatter(np.array([design_alt_aero,design_alt_bell]),np.array([thrust_design_aero,thrust_design_bell]),10,'k')
+    results_aero_cfd_60 = np.load("D:/Rocket/Cold_Flow_Nozzle/CF_Truncation_PR50_Sweep_60_files/dp13/FLU/Fluent/outputs/results.npy")
+    pressures_aero_cfd_60 = 500000/results_aero_cfd_60[:,0]
+    Isp_aero_cfd_60 = results_aero_cfd_60[:,1]
+    altitudes_aero_cfd_60 = np.interp(pressures_aero_cfd_60,P_variation[::-1],altitudes[::-1])
+    
+    results_aero_cfd_80 = np.load("D:/Rocket/Cold_Flow_Nozzle/CF_Truncation_PR50_Sweep_80_files/dp13/FLU/Fluent/outputs/results.npy")
+    pressures_aero_cfd_80 = 500000/results_aero_cfd_80[:,0]
+    Isp_aero_cfd_80 = results_aero_cfd_80[:,1]
+    altitudes_aero_cfd_80 = np.interp(pressures_aero_cfd_80,P_variation[::-1],altitudes[::-1])
+    
+    results_aero_cfd_full = np.load("D:/Rocket/Cold_Flow_Nozzle/CF_Truncation_PR50_Sweep_Full_files/dp13/FLU/Fluent/outputs/results.npy")
+    pressures_aero_cfd_full = 500000/results_aero_cfd_full[:,0]
+    Isp_aero_cfd_full = results_aero_cfd_full[:,1]
+    altitudes_aero_cfd_full = np.interp(pressures_aero_cfd_full,P_variation[::-1],altitudes[::-1])
+    
+    plt.figure()
+    plt.plot(altitudes,Isp_bell)
+    plt.plot(altitudes,Isp_aero)
+    plt.scatter(np.array([design_alt_aero,design_alt_bell]),np.array([thrust_design_aero/(m_dot_design*g_0),thrust_design_bell/(m_dot_design*g_0)]),10,'k')
+    
+    plt.plot(altitudes_aero_cfd_60[1:],Isp_aero_cfd_60[1:],'ro',altitudes_aero_cfd_60[1:],Isp_aero_cfd_60[1:],'r-')
+    plt.plot(altitudes_aero_cfd_80,Isp_aero_cfd_80,'bo',altitudes_aero_cfd_80,Isp_aero_cfd_80,'b-')
+    plt.plot(altitudes_aero_cfd_full,Isp_aero_cfd_full,'ko',altitudes_aero_cfd_full,Isp_aero_cfd_full,'k-')
+    plt.xlim([0,35000])
     
     
     
