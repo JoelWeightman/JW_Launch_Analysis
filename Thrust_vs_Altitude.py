@@ -198,6 +198,11 @@ if __name__ == "__main__":
     Isp_aero_cfd_full = results_aero_cfd_full[:,1]
     altitudes_aero_cfd_full = np.interp(pressures_aero_cfd_full,P_variation[::-1],altitudes[::-1])
     
+    results_aero_cfd_full_200 = np.load("D:/Rocket/Cold_Flow_Nozzle/CF_Truncation_PR200_Sweep_Full_files/dp13/FLU/Fluent/outputs/results.npy")
+    pressures_aero_cfd_full_200 = 500000/results_aero_cfd_full_200[:,0]
+    Isp_aero_cfd_full_200 = results_aero_cfd_full_200[:,1]
+    altitudes_aero_cfd_full_200 = np.interp(pressures_aero_cfd_full_200,P_variation[::-1],altitudes[::-1])
+    
     plt.figure()
     plt.plot(altitudes,Isp_bell)
     plt.plot(altitudes,Isp_aero)
@@ -206,6 +211,7 @@ if __name__ == "__main__":
     plt.plot(altitudes_aero_cfd_60[1:],Isp_aero_cfd_60[1:],'ro',altitudes_aero_cfd_60[1:],Isp_aero_cfd_60[1:],'r-')
     plt.plot(altitudes_aero_cfd_80,Isp_aero_cfd_80,'bo',altitudes_aero_cfd_80,Isp_aero_cfd_80,'b-')
     plt.plot(altitudes_aero_cfd_full,Isp_aero_cfd_full,'ko',altitudes_aero_cfd_full,Isp_aero_cfd_full,'k-')
+    plt.plot(altitudes_aero_cfd_full_200,Isp_aero_cfd_full_200,'go',altitudes_aero_cfd_full_200,Isp_aero_cfd_full_200,'g-')
     plt.xlim([0,35000])
     
     
